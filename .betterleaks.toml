@@ -1,0 +1,27 @@
+# Betterleaks rules for Partner OS
+# Blocks accidental commit of API keys and sensitive files
+
+[[rule]]
+id = "gemini-api-key"
+description = "Google Gemini API Key"
+pattern = 'AIza[0-9A-Za-z\-_]{35}'
+
+[[rule]]
+id = "groq-api-key"
+description = "Groq API Key"
+pattern = 'gsk_[a-zA-Z0-9]{50,}'
+
+[[rule]]
+id = "openrouter-api-key"
+description = "OpenRouter API Key"
+pattern = 'sk-or-[a-zA-Z0-9]{40,}'
+
+[[rule]]
+id = "dotenv-file"
+description = "Environment variables file"
+pattern = '\.env'
+
+[[rule]]
+id = "hardcoded-home-path"
+description = "Hardcoded absolute home paths"
+pattern = '/home/fasahov/'
