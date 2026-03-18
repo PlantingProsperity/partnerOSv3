@@ -40,12 +40,19 @@ def init_db(schema_path: Path = config.BASE_DIR / "src/database/schema.sql"):
     """
     Initializes the database with the schema.sql DDL.
     """
+    db_path = config.DB_PATH
+    if db_path.exists():
+        db_path.unlink()
+        
     conn = get_connection()
+    # Must be set before tables are created for a new DB
+    conn.execute("PRAGMA auto_vacuum = INCREMENTAL")
+    
     with open(schema_path, "r") as f:
         conn.executescript(f.read())
     conn.commit()
     conn.close()
-    print(f"Database initialized at {config.DB_PATH}")
+    print(f"Database initialized at {config.DB_PATH} with auto_vacuum=INCREMENTAL")
 
 def backup_before_migration():
     """
