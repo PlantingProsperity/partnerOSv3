@@ -17,7 +17,7 @@
 
 | Sprint | Goal | Status | Acceptance Test |
 |---|---|---|---|
-| **S0** | Foundation | 🟡 IN PROGRESS | Not yet run |
+| **S0** | Foundation | ✅ COMPLETE | 2026-03-18 |
 | S1 | Pinneo Brain (hybrid RAG) | ⬜ NOT STARTED | — |
 | S2 | LangGraph Shell | ⬜ NOT STARTED | — |
 | S3 | Librarian | ⬜ NOT STARTED | — |
