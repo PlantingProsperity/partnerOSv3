@@ -43,7 +43,7 @@ def _log_firewall_event(agent: str, passed: bool, blocked_pattern: str | None, t
     """
     Logs firewall events to the database for audit tracking.
     """
-    ts = datetime.datetime.utcnow().isoformat()
+    ts = datetime.datetime.now(datetime.UTC).isoformat()
     output_hash = hashlib.sha256(text.encode()).hexdigest()
     
     conn = get_connection()

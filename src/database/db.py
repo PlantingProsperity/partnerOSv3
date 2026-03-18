@@ -59,7 +59,7 @@ def backup_before_migration():
     ADR-H04: Timestamped snapshot before schema changes.
     """
     if config.DB_PATH.exists():
-        timestamp = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%SZ")
         backup_path = config.DATA_DIR / f"partner_os.db.pre_migration.{timestamp}"
         shutil.copy2(config.DB_PATH, backup_path)
         return backup_path

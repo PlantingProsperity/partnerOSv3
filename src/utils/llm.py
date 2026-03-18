@@ -81,7 +81,7 @@ def _log_usage(agent: str, model: str, call_type: str,
     """
     Internal helper to log usage to SQLite tables.
     """
-    ts = datetime.datetime.utcnow().isoformat()
+    ts = datetime.datetime.now(datetime.UTC).isoformat()
     date = datetime.date.today().isoformat()
     
     conn = get_connection()
