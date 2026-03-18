@@ -1,0 +1,20 @@
+# System
+.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+
+# Data & Storage
+data/partner_os.db*
+data/backups/
+deals/
+staging/
+knowledge/
+
+# Build
+dist/
+build/
+*.egg-info/
+.venv/
+venv/

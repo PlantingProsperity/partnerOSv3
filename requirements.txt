@@ -1,0 +1,16 @@
+langgraph>=0.2
+langgraph-checkpoint-sqlite>=2.0
+litellm>=1.57
+google-generativeai>=0.8
+google-api-core>=2.19
+sqlite-vec>=0.1
+apscheduler==3.*
+streamlit>=1.40
+playwright>=1.49
+beautifulsoup4>=4.12
+pdfplumber>=0.11
+python-docx>=1.1
+pandas>=2.2
+structlog>=24.0
+python-dotenv>=1.0
+pytest>=8.0
