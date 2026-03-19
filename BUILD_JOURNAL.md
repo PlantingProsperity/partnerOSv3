@@ -30,7 +30,15 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S2: LangGraph Shell (In Progress)
+## Sprint S2: LangGraph Shell (Completed 2026-03-18)
 
 **Goal:** Graph compiles, State flows, Interrupts work.
-**Current Phase:** Design & Brainstorming
+**Key Decisions:**
+*   **ADR-S2-01: Dedicated Checkpoint Database.** 
+    *   *Rationale:* LangGraph generates significant WAL traffic and blob storage as it checkpoints state between every node. To prevent lock contention and bloat in the main `partner_os.db` (which handles business logic and vector search), a dedicated `checkpoints.sqlite` was established exclusively for `langgraph-checkpoint-sqlite`.
+*   **ADR-S2-02: Strict State Schema.**
+    *   *Rationale:* Implemented a strict `TypedDict` for `DealState` with explicit `merge_dicts` annotations for payload dictionaries (`financials`, `property_data`). This ensures parallel nodes (like Scout and Profiler) don't overwrite each other's updates.
+
+---
+
+## Sprint S3: Librarian (Not Started)

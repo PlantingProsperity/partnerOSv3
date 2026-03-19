@@ -5,6 +5,7 @@ from pathlib import Path
 BASE_DIR       = Path(__file__).parent.resolve()
 DATA_DIR       = BASE_DIR / "data"
 DB_PATH        = DATA_DIR / "partner_os.db"
+CHECKPOINT_DB_PATH = DATA_DIR / "checkpoints.sqlite"
 KNOWLEDGE_DIR  = BASE_DIR / "knowledge"
 STAGING_DIR    = BASE_DIR / "staging" / "inbox"
 INBOX_DIR      = STAGING_DIR
@@ -15,10 +16,10 @@ DEALS_DIR      = BASE_DIR / "deals"
 PRIMARY_PROVIDER: str = os.environ.get("PRIMARY_PROVIDER", "gemini")
 
 # Fast models (classification, transcription)
-GEMINI_FLASH: str = "gemini/gemini-2.5-flash"
+GEMINI_FLASH: str = "gemini/gemini-flash-latest"
 
 # Quality models (extraction, reasoning)
-GEMINI_PRO:   str = "gemini/gemini-2.5-pro"
+GEMINI_PRO:   str = "gemini/gemini-pro-latest"
 
 # Mapping for LiteLLM (unified interface)
 FAST_MODEL: str = {
