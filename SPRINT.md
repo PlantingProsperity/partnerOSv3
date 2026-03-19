@@ -28,7 +28,7 @@
 - [ ] **Verify Brain Coverage:** `SELECT COUNT(DISTINCT source_path) FROM brain_chunks` should match total `.md` files in `knowledge/`.
 | S2 | LangGraph Shell | ✅ COMPLETE | 2026-03-18 |
 | S3 | Librarian | ✅ COMPLETE | 2026-03-18 |
-| S4 | CFO | ⬜ NOT STARTED | — |
+| S4 | CFO | ✅ COMPLETE | 2026-03-18 |
 | S5 | pinneo_gate | ⬜ NOT STARTED | — |
 | S6 | Scout + Profiler | ⬜ NOT STARTED | — |
 | S7 | Manager + UI | ⬜ NOT STARTED | — |

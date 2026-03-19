@@ -54,4 +54,17 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S4: CFO (Not Started)
+## Sprint S4: CFO (Completed 2026-03-18)
+
+**Goal:** Financial extraction, verification gate, and deterministic math.
+**Key Decisions:**
+*   **ADR-S4-01: CFO Hybrid Parsing Router.**
+    *   *Rationale:* Pure AI extraction struggles with structured tables, while traditional parsers (`pdfplumber`) fail on messy scanned PDFs. Implemented a hybrid router: `.csv`/`.xlsx` files are parsed deterministically via `pandas` into Markdown text (fast, 100% accurate layout), while `.pdf`/`.jpg` files are passed directly to the Gemini GenAI File API to leverage its superior multimodal vision capabilities for complex unstructured layouts.
+*   **ADR-S4-02: Missing Citation Handling.**
+    *   *Rationale:* If the LLM extracts a value but fails to cite it, the system accepts the value but sets the citation to null. This relies on the Phase 2 (Human Verification) UI to flag the missing citation, forcing the principal to verify the hallucination visually, rather than entering an infinite retry loop.
+*   **ADR-S4-03: Pydantic Schema Enforcement.**
+    *   *Rationale:* Used Pydantic classes to define the exact `CFOExtraction` schema, which will be passed to LiteLLM's structured output parameter to guarantee the JSON shape of the Phase 1 extraction.
+
+---
+
+## Sprint S5: pinneo_gate (Not Started)
