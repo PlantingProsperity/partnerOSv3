@@ -1,5 +1,6 @@
 import hashlib
 import datetime
+import time
 from pathlib import Path
 from typing import List, Dict
 import config
@@ -56,24 +57,25 @@ class BrainEmbedder:
                 content = f.read()
             
             content_hash = hashlib.sha256(content.encode()).hexdigest()
+            chunks = self._chunk_text(content)
             
-            # Skip if file already embedded and hash matches
-            if self._file_already_embedded(file_path, content_hash):
+            # Skip if file already embedded and hash matches AND chunk count matches
+            if self._file_already_embedded(file_path, content_hash, len(chunks)):
                 # log.debug("skipping_file_no_change", file=str(file_path))
                 return
 
-            # Remove old chunks for this file
+            # Remove old chunks for this file (ensures atomicity if we resume)
             self._delete_old_chunks(file_path)
 
-            # Perform chunking
-            chunks = self._chunk_text(content)
-            
             for i, chunk_text in enumerate(chunks):
                 # Call LLM for embedding via our unified gateway
                 embedding = llm.embed(chunk_text, agent="brain_embedder")
                 
                 # Write to brain_chunks (F32_BLOB for sqlite-vec)
                 self._insert_chunk(file_path, source_cat, chunk_text, i, content_hash, embedding)
+                
+                # Rate limit for Gemini Free Tier (100 RPM limit)
+                time.sleep(0.7)
                 
             log.info("file_embedded", file=str(file_path), chunks=len(chunks))
 
@@ -111,12 +113,15 @@ class BrainEmbedder:
         """, (str(path), cat, text, idx, hash, ts, blob))
         self.conn.commit()
 
-    def _file_already_embedded(self, path: Path, current_hash: str) -> bool:
+    def _file_already_embedded(self, path: Path, current_hash: str, expected_chunks: int) -> bool:
+        """
+        Only skip if the file exists with the same hash AND the correct number of chunks.
+        """
         row = self.conn.execute(
-            "SELECT 1 FROM brain_chunks WHERE source_path = ? AND content_hash = ? LIMIT 1",
+            "SELECT COUNT(*) FROM brain_chunks WHERE source_path = ? AND content_hash = ?",
             (str(path), current_hash)
         ).fetchone()
-        return row is not None
+        return row[0] == expected_chunks
 
     def _delete_old_chunks(self, path: Path):
         self.conn.execute("DELETE FROM brain_chunks WHERE source_path = ?", (str(path),))
