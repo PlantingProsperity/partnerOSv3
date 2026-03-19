@@ -67,4 +67,15 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S5: pinneo_gate (Not Started)
+## Sprint S5: pinneo_gate (Completed 2026-03-18)
+
+**Goal:** Pure Python heuristics evaluation.
+**Key Decisions:**
+*   **ADR-S5-01: Pure Python Evaluation.**
+    *   *Rationale:* Mathematical thresholds (DSCR < 1.15, Cap Rate < 6%) are deterministic rules, not creative tasks. Offloading this check from the Manager LLM to a pure Python node ensures 100% accuracy, saves token costs, executes in < 1ms, and guarantees the Manager always receives explicitly flagged failures rather than having to discover them.
+*   **ADR-S5-02: HARD_FLAG pattern.**
+    *   *Rationale:* The node does not short-circuit the graph to a `KILL` state. It merely flags the failure in `DealState`. This allows the parallel Scout/Profiler nodes to continue gathering context so the Manager can synthesize a creative "Pinneo structuring" solution to rescue the deal.
+
+---
+
+## Sprint S6: Scout + Profiler (Not Started)
