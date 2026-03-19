@@ -41,4 +41,17 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S3: Librarian (Not Started)
+## Sprint S3: Librarian (Completed 2026-03-18)
+
+**Goal:** Multimodal intake, filesystem authority, and knowledge maintenance.
+**Key Decisions:**
+*   **ADR-S3-01: Generic -latest Aliases.**
+    *   *Rationale:* Removed hardcoded "gemini-2.5" references from the codebase and documentation. Configured `config.py` to use `gemini-flash-latest` and `gemini-pro-latest` to ensure the system always defaults to Google's most current stable/preview models without requiring manual code updates.
+*   **ADR-S3-02: Dual-Hashing Strategy.**
+    *   *Rationale:* Implemented SHA-256 chunked hashing in `src/utils/hashing.py` to handle large audio/video files. The hash is used to query the `files` table for rapid system-wide deduplication during the `staging/inbox/` sweep.
+*   **ADR-S3-03: Librarian as Knowledge Maintainer.**
+    *   *Rationale:* Added `_maintain_knowledge()` to the Librarian class to trigger the `BrainEmbedder` automatically, ensuring the vector database (`brain_chunks`) stays synchronized with the filesystem `knowledge/` directory during standard system sweeps.
+
+---
+
+## Sprint S4: CFO (Not Started)

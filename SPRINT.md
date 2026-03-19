@@ -27,7 +27,7 @@
 - [ ] **Resume Brain Ingestion:** Run `python3 src/brain/embedder.py` once Gemini Daily Quota resets to finish the final ~100-200 chunks.
 - [ ] **Verify Brain Coverage:** `SELECT COUNT(DISTINCT source_path) FROM brain_chunks` should match total `.md` files in `knowledge/`.
 | S2 | LangGraph Shell | ✅ COMPLETE | 2026-03-18 |
-| S3 | Librarian | ⬜ NOT STARTED | — |
+| S3 | Librarian | ✅ COMPLETE | 2026-03-18 |
 | S4 | CFO | ⬜ NOT STARTED | — |
 | S5 | pinneo_gate | ⬜ NOT STARTED | — |
 | S6 | Scout + Profiler | ⬜ NOT STARTED | — |
