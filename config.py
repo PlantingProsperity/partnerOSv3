@@ -36,8 +36,8 @@ QUALITY_MODEL: str = {
 }.get(PRIMARY_PROVIDER, GEMINI_PRO)
 
 # Embeddings NEVER change with PRIMARY_PROVIDER.
-EMBEDDING_MODEL: str = "gemini/text-embedding-004"
-EMBEDDING_DIM:   int  = 768
+EMBEDDING_MODEL: str = "gemini/gemini-embedding-2-preview"
+EMBEDDING_DIM:   int  = 3072
 
 LOCAL_BASE_URL: str = os.environ.get("LOCAL_BASE_URL", "http://localhost:8080")
 
@@ -45,7 +45,7 @@ LOCAL_BASE_URL: str = os.environ.get("LOCAL_BASE_URL", "http://localhost:8080")
 CHUNK_SIZE:           int   = 800   # characters
 CHUNK_OVERLAP:        int   = 150   # characters
 RAG_TOP_K:            int   = 5     # chunks returned per retrieval query
-LOW_CONFIDENCE_FLOOR: float = 0.40  # below this RRF score → low_confidence=True
+LOW_CONFIDENCE_FLOOR: float = 0.02  # below this RRF score → low_confidence=True
 
 # ── Financial Thresholds ──────────────────────────────────────────────────────
 CFO_DSCR_FLOOR:     float = 1.15  # below this → below_dscr_floor=True
