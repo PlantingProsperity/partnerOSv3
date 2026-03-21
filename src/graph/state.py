@@ -1,4 +1,4 @@
-from typing import TypedDict, Annotated, List, Dict, Any
+from typing import TypedDict, Annotated, List, Dict, Any, Optional
 import operator
 
 def merge_dicts(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
@@ -13,6 +13,7 @@ class DealState(TypedDict):
     """
     deal_id: str
     address: str
+    parcel_number: Optional[str]
     status: str  # 'INTAKE', 'UNDER_REVIEW', 'APPROVED', 'KILLED'
     
     # ── Routing Flags ──
@@ -26,6 +27,8 @@ class DealState(TypedDict):
     financials: Annotated[Dict[str, Any], merge_dicts]
     property_data: Annotated[Dict[str, Any], merge_dicts]
     seller_archetype: str
+    profiler_confidence: int
+    profiler_cites: List[str]
     
     # Final Output
     verdict: str
