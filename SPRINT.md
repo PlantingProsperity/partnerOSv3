@@ -34,6 +34,8 @@
 | S4 | CFO | ✅ COMPLETE | 2026-03-18 |
 | S5 | pinneo_gate | ✅ COMPLETE | 2026-03-18 |
 | S6 | Scout + Profiler | ✅ COMPLETE | 2026-03-21 |
-| S7 | Manager + UI | ⬜ NOT STARTED | — |
-| S8 | Firehouse | ⬜ NOT STARTED | — |
-| S9 | Learning Loop + Health | ⬜ NOT STARTED | — |
+| S7 | Manager Node | ✅ COMPLETE | 2026-03-21 |
+| S8 | Scribe Node | ⬜ NOT STARTED | — |
+| S9 | Streamlit UI | ⬜ NOT STARTED | — |
+| S10 | Firehouse | ⬜ NOT STARTED | — |
+| S11 | Learning Loop + Health | ⬜ NOT STARTED | — |

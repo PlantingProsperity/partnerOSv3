@@ -87,4 +87,13 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S7: Manager + UI (Not Started)
+## Sprint S7: Manager Node (Completed 2026-03-21)
+
+**Goal:** Deal synthesis, decision-making, and delegation.
+**Key Decisions:**
+*   **ADR-S7-01: Manager/Scribe Decoupling.**
+    *   *Rationale:* To prevent LLM "attention dilution," the Manager node is strictly prohibited from formatting final documents (like an LOI). Its sole responsibility is to evaluate the board, issue a verdict (`APPROVE` or `KILL`), and output a dense, structured list of `scribe_instructions`. This enforces the Single Responsibility Principle within the multi-agent graph.
+
+---
+
+## Sprint S8: Scribe Node (Not Started)
