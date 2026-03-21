@@ -58,8 +58,8 @@ This document is a persistent, meticulous log of the build process, architectura
 
 **Goal:** Financial extraction, verification gate, and deterministic math.
 **Key Decisions:**
-*   **ADR-S4-01: CFO Hybrid Parsing Router.**
-    *   *Rationale:* Pure AI extraction struggles with structured tables, while traditional parsers (`pdfplumber`) fail on messy scanned PDFs. Implemented a hybrid router: `.csv`/`.xlsx` files are parsed deterministically via `pandas` into Markdown text (fast, 100% accurate layout), while `.pdf`/`.jpg` files are passed directly to the Gemini GenAI File API to leverage its superior multimodal vision capabilities for complex unstructured layouts.
+*   **ADR-S4-01: CFO Hybrid Parsing Router with Graceful Fallback.**
+    *   *Rationale:* Pure AI extraction struggles with structured tables, while traditional parsers (`pdfplumber`) fail on messy scanned PDFs. Implemented a hybrid router: `.csv`/`.xlsx` files are parsed deterministically via `pandas` into Markdown text (fast, 100% accurate layout), while `.pdf`/`.jpg` files are passed directly to the Gemini GenAI File API to leverage its superior multimodal vision capabilities for complex unstructured layouts. For plain text (`.txt`, `.md`), it reads them directly. Crucially, if an unknown binary format is encountered, it returns a graceful string placeholder rather than crashing, allowing the Librarian LLM to explicitly classify it as `OTHER` and route to the `unresolved/` queue for human review.
 *   **ADR-S4-02: Missing Citation Handling.**
     *   *Rationale:* If the LLM extracts a value but fails to cite it, the system accepts the value but sets the citation to null. This relies on the Phase 2 (Human Verification) UI to flag the missing citation, forcing the principal to verify the hallucination visually, rather than entering an infinite retry loop.
 *   **ADR-S4-03: Pydantic Schema Enforcement.**
