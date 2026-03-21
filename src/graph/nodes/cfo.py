@@ -40,26 +40,37 @@ def _parse_document(file_path: Path) -> Union[str, Any]:
     Hybrid Router: 
     - CSV/XLSX -> Returns a Markdown formatted string via pandas.
     - PDF/Images -> Uploads via Gemini File API and returns the File object.
+    - TXT/MD -> Returns raw text.
+    - Unknown -> Returns a string indicating unparseable format.
     """
     ext = file_path.suffix.lower()
     
-    if ext == '.csv':
-        df = pd.read_csv(file_path)
-        return f"File: {file_path.name}\n\n{df.to_markdown()}"
-        
-    elif ext == '.xlsx':
-        df = pd.read_excel(file_path)
-        return f"File: {file_path.name}\n\n{df.to_markdown()}"
-        
-    elif ext in ['.pdf', '.jpg', '.jpeg', '.png']:
-        log.info("uploading_to_gemini_file_api", file=file_path.name)
-        # Using the new google-genai SDK
-        client = genai.Client()
-        uploaded_file = client.files.upload(file=str(file_path))
-        return uploaded_file
-        
-    else:
-        raise ValueError(f"Unsupported financial document type: {ext}")
+    try:
+        if ext == '.csv':
+            df = pd.read_csv(file_path)
+            return f"File: {file_path.name}\n\n{df.to_markdown()}"
+            
+        elif ext == '.xlsx':
+            df = pd.read_excel(file_path)
+            return f"File: {file_path.name}\n\n{df.to_markdown()}"
+            
+        elif ext in ['.pdf', '.jpg', '.jpeg', '.png']:
+            log.info("uploading_to_gemini_file_api", file=file_path.name)
+            client = genai.Client()
+            uploaded_file = client.files.upload(file=str(file_path))
+            return uploaded_file
+            
+        elif ext in ['.txt', '.md', '.rtf', '.csv']:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f"File: {file_path.name}\n\n{f.read()}"
+                
+        else:
+            log.warning("unknown_file_type", file=file_path.name, ext=ext)
+            return f"File: {file_path.name}\n\n[Content unparseable due to unknown format: {ext}]"
+            
+    except Exception as e:
+        log.error("document_parsing_failed", file=file_path.name, error=str(e))
+        return f"File: {file_path.name}\n\n[Failed to parse: {str(e)}]"
 
 # ── Nodes ─────────────────────────────────────────────────────────────────────
 

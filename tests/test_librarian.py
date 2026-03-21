@@ -18,8 +18,8 @@ def test_librarian_sweep_and_deduplication(mock_complete, tmp_path):
     config.INBOX_DIR = test_inbox
     
     # Create a test file with unique content to avoid cross-test hash collisions in the real DB
-    unique_content = f"Category,Amount\nTest,{uuid.uuid4()}"
-    test_file = test_inbox / "test_doc.csv"
+    unique_content = f"This is a test document. ID: {uuid.uuid4()}"
+    test_file = test_inbox / "test_doc.txt"
     test_file.write_text(unique_content)
     
     librarian = Librarian()
@@ -27,16 +27,16 @@ def test_librarian_sweep_and_deduplication(mock_complete, tmp_path):
     # 1. First sweep should process the file
     processed_first = librarian._sweep_inbox()
     assert len(processed_first) == 1
-    assert processed_first[0]["name"] == "test_doc.csv"
+    assert processed_first[0]["name"] == "test_doc.txt"
     
     # Manually insert into DB to simulate routing/saving
     file_hash = processed_first[0]["hash"]
-    unique_path = f"/dummy/path/{uuid.uuid4()}.csv"
+    unique_path = f"/dummy/path/{uuid.uuid4()}.txt"
     conn = get_connection()
     conn.execute("""
         INSERT INTO files (file_path, original_name, file_type, content_class, content_hash, discovered_at)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (unique_path, "test_doc.csv", "other", "OTHER", file_hash, "2026-03-18"))
+    """, (unique_path, "test_doc.txt", "other", "OTHER", file_hash, "2026-03-18"))
     conn.commit()
     conn.close()
     
