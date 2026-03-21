@@ -33,4 +33,6 @@ class DealState(TypedDict):
     # Final Output
     verdict: str
     reasoning_text: str
-    conditions_to_flip: List[str]
+    manager_confidence: int
+    scribe_instructions: str
+    loi_draft: str

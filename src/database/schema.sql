@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS verdicts (
     verdict           TEXT    NOT NULL CHECK(verdict IN ('APPROVE','KILL')),
     confidence        INTEGER NOT NULL,
     reasoning_text    TEXT    NOT NULL,
-    conditions_to_flip TEXT,   -- JSON
+    scribe_instructions TEXT,
     loi_path          TEXT,
     issued_at         TEXT    NOT NULL
 );
