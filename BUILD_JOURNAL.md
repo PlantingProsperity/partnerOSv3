@@ -78,4 +78,13 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S6: Scout + Profiler (Not Started)
+## Sprint S6: Scout + Profiler (Completed 2026-03-21)
+
+**Goal:** Parallel analysis of external data and seller psychology.
+**Key Decisions:**
+*   **ADR-S6-01: Local Data Warehouse (Bypassing CAPTCHA).**
+    *   *Rationale:* Clark County `gis.clark.wa.gov` aggressively blocks automated web scrapers via Google reCAPTCHA and IP blocks. Building a Playwright scraper would result in a fragile, broken system. Instead, we shifted to a "Local Data Warehouse" strategy. The `clark_county_sync.py` script ingests the monthly bulk data CSV provided by the county into a local SQLite table (`clark_county_cache`). The Scout agent now performs instantaneous, 100% reliable local database queries based on `parcel_number` rather than fragile web scraping.
+
+---
+
+## Sprint S7: Manager + UI (Not Started)
