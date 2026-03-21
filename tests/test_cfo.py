@@ -2,9 +2,60 @@ import pytest
 import pandas as pd
 import json
 from pathlib import Path
-from src.graph.nodes.cfo import _parse_document, cfo_calculate_node
+from unittest.mock import patch
+from src.graph.nodes.cfo import _parse_document, cfo_calculate_node, cfo_extract_node
 from src.graph.state import DealState
 from src.database.db import get_connection
+
+@patch("src.graph.nodes.cfo.llm.complete")
+@patch("src.graph.nodes.cfo._parse_document")
+def test_cfo_extract_node(mock_parse, mock_complete):
+    deal_id = "test_extract_123"
+    
+    # 0. Insert dummy deal to satisfy foreign key constraint
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR IGNORE INTO deals (deal_id, address, address_slug, jacket_path, thread_id, created_at, updated_at)
+        VALUES (?, '123 Extract Ave', '123-extract-ave', '/dummy/extract', 'thread_extract_123', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """, (deal_id,))
+    conn.commit()
+    conn.close()
+    
+    # Setup mocks
+    mock_parse.return_value = "Mock document text"
+    mock_complete.return_value = '{"gross_income": {"value": 150000.0, "citation": {"file": "doc.pdf", "page": 1, "verbatim_text": "Gross: 150k"}}}'
+    
+    # Setup State
+    state = DealState(
+        deal_id=deal_id,
+        address="123 Extract Ave",
+        status="UNDER_REVIEW",
+        cfo_verified=False,
+        heuristic_flagged=False,
+        heuristic_failures=[],
+        financials={},
+        financial_doc_paths=["/dummy/path/doc.pdf"],
+        property_data={},
+        seller_archetype="",
+        verdict="",
+        reasoning_text="",
+        conditions_to_flip=[]
+    )
+    
+    # Execute
+    result = cfo_extract_node(state)
+    
+    # Verify
+    assert result["financials"]["extracted"] is True
+    assert "draft_id" in result["financials"]
+    
+    # Clean up
+    conn = get_connection()
+    conn.execute("DELETE FROM draft_financials WHERE deal_id = ?", (deal_id,))
+    conn.execute("DELETE FROM deals WHERE deal_id = ?", (deal_id,))
+    conn.commit()
+    conn.close()
 
 def test_hybrid_parser_csv(tmp_path):
     # Create a dummy CSV

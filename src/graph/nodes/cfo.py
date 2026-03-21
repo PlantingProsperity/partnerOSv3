@@ -7,6 +7,7 @@ from google import genai
 from src.graph.state import DealState
 from src.utils.logger import get_logger
 from src.database.db import get_connection
+from src.utils import llm
 import config
 
 log = get_logger("agent.cfo")
@@ -69,15 +70,47 @@ def cfo_extract_node(state: DealState) -> dict:
     deal_id = state.get("deal_id")
     log.info("executing_cfo_extract", deal_id=deal_id)
     
-    # In a full run, we iterate over state["financial_doc_paths"]
-    # Here we mock the result to avoid an actual API call during fast graph tests
-    # while establishing the DB insertion logic.
-    mock_extraction = CFOExtraction(
-        gross_income=CFOField(value=120000, citation=CFOCitation(file="T12.pdf", verbatim_text="Total: 120k")),
-        operating_expenses=CFOField(value=45000, citation=CFOCitation(file="T12.pdf", verbatim_text="Expenses: 45k")),
-        noi=CFOField(value=75000, citation=CFOCitation(file="T12.pdf", verbatim_text="NOI: 75k")),
-        asking_price=CFOField(value=1000000, citation=CFOCitation(file="OM.pdf", verbatim_text="Ask: 1M"))
-    )
+    # Grab the financial documents assigned to this deal by the Librarian
+    financial_doc_paths = state.get("financial_doc_paths", [])
+    
+    # In S4, we assume at least one document is present.
+    # For a robust implementation, we would process all paths.
+    # Here we process the first one for demonstration.
+    if not financial_doc_paths:
+        log.warning("no_financial_docs_found", deal_id=deal_id)
+        # We can't extract if there are no docs, but we'll create a dummy record
+        # so Phase 2 can still trigger and the user can manually enter data.
+        extraction = CFOExtraction()
+    else:
+        try:
+            doc_path = Path(financial_doc_paths[0])
+            document_content = _parse_document(doc_path)
+            
+            prompt = """
+            You are an expert commercial real estate underwriter. 
+            Extract the core financial metrics from the provided document.
+            For every value you extract, you MUST provide a verbatim citation.
+            If a value is not found in the document, return null for that field.
+            
+            Document:
+            {doc}
+            """.format(doc=document_content)
+            
+            import json
+            
+            response_str = llm.complete(
+                prompt=prompt,
+                tier="quality",
+                agent="cfo_p1",
+                deal_id=deal_id,
+                response_format=CFOExtraction
+            )
+            
+            extraction = CFOExtraction.model_validate_json(response_str)
+            
+        except Exception as e:
+            log.error("cfo_extraction_failed", deal_id=deal_id, error=str(e))
+            extraction = CFOExtraction()
     
     # Write to draft_financials
     conn = get_connection()
@@ -85,7 +118,7 @@ def cfo_extract_node(state: DealState) -> dict:
     cursor.execute("""
         INSERT INTO draft_financials (deal_id, citations, status, created_at)
         VALUES (?, ?, 'UNVERIFIED', CURRENT_TIMESTAMP)
-    """, (deal_id, mock_extraction.model_dump_json()))
+    """, (deal_id, extraction.model_dump_json()))
     draft_id = cursor.lastrowid
     conn.commit()
     conn.close()
