@@ -204,6 +204,18 @@ CREATE TABLE IF NOT EXISTS property_records (
     created_at        TEXT    NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS clark_county_cache (
+    parcel_number   TEXT PRIMARY KEY,
+    address         TEXT,
+    owner_name      TEXT,
+    zoning          TEXT,
+    year_built      INTEGER,
+    assessed_value  REAL,
+    tax_status      TEXT,
+    last_sale_date  TEXT,
+    updated_at      TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS seller_profiles (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     deal_id         TEXT    NOT NULL REFERENCES deals(deal_id),
