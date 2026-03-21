@@ -1,14 +1,14 @@
 import os
 import datetime
 import litellm
-from typing import Optional, List
+from typing import Optional, List, Any
 import config
 from src.utils.logger import get_logger
 from src.database.db import get_connection
 
 log = get_logger("llm_gateway")
 
-def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None) -> str:
+def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None, response_format: Any = None) -> str:
     """
     Unified completion interface. Routes to FAST or QUALITY model
     and logs token usage to SQLite.
@@ -18,11 +18,17 @@ def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None) -> 
     try:
         start_time = datetime.datetime.now()
         
-        response = litellm.completion(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            api_key=os.environ.get("GEMINI_API_KEY")
-        )
+        kwargs = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "api_key": os.environ.get("GEMINI_API_KEY")
+        }
+        
+        if response_format:
+            # Tell LiteLLM to enforce the Pydantic schema
+            kwargs["response_format"] = response_format
+            
+        response = litellm.completion(**kwargs)
         
         duration = (datetime.datetime.now() - start_time).total_seconds() * 1000
         content = response.choices[0].message.content

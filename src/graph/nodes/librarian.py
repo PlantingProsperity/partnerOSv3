@@ -3,14 +3,20 @@ import json
 import datetime
 from pathlib import Path
 from typing import Tuple, Optional
+from pydantic import BaseModel, Field
 from src.graph.state import DealState
 from src.utils.logger import get_logger
 from src.database.db import get_connection
 from src.utils.hashing import get_file_hash
 from src.utils import llm
+from src.graph.nodes.cfo import _parse_document
 import config
 
 log = get_logger("agent.librarian")
+
+class LibrarianClassification(BaseModel):
+    content_class: str = Field(description="One of: FINANCIAL_DOCUMENT, SELLER_CORRESPONDENCE, TITLE_REPORT, INSPECTION_REPORT, FIELD_NOTES, MUNICIPAL_RECORD, OFFERING_MEMORANDUM, LEGAL_DOCUMENT, OTHER")
+    deal_id: Optional[str] = Field(None, description="The specific Deal ID if clearly identifiable in the document, else null.")
 
 class Librarian:
     def __init__(self):
@@ -36,21 +42,37 @@ class Librarian:
         Uses Gemini to classify the file content and extract a Deal ID if possible.
         Returns: (ContentClass, DealID)
         """
-        # In a full implementation, this uses Gemini File API for audio 
-        # and LiteLLM multimodal for images/PDFs.
-        # For the S3 structural completion, we simulate the LLM extraction.
-        
         ext = file_path.suffix.lower()
-        if ext in ['.m4a', '.mp3', '.wav']:
-            # Simulate Audio Transcription
-            log.info("simulating_audio_transcription", file=file_path.name)
-            return ("SELLER_CORRESPONDENCE", None) # Audio often needs manual routing
+        
+        # 1. Handle Audio separately (ADR-005)
+        if ext in ['.m4a', '.mp3', '.wav', '.mp4']:
+            log.info("audio_file_detected_for_transcription", file=file_path.name)
+            # Transcription logic goes here. For now, we return default classification.
+            return ("SELLER_CORRESPONDENCE", None)
             
-        elif ext in ['.pdf', '.xlsx']:
-            # Simulate Document Classification
-            return ("FINANCIAL_DOCUMENT", "deal_123")
+        # 2. Handle Documents & Images via LLM
+        try:
+            # Re-use the CFO hybrid parser to get a string or Gemini File object
+            document_content = _parse_document(file_path)
             
-        return ("OTHER", None)
+            prompt = f"Analyze the following document and classify it into one of our taxonomy classes. Also, extract the Deal ID if it is explicitly mentioned (otherwise return null).\n\nDocument:\n{document_content}"
+            
+            import json
+            response_str = llm.complete(
+                prompt=prompt,
+                tier="fast",
+                agent="librarian",
+                # Pass the Pydantic schema to force structured output
+                # Note: LiteLLM handles the translation to the provider's native format
+            )
+            
+            # The response string should be a JSON matching our schema
+            classification = LibrarianClassification.model_validate_json(response_str)
+            return (classification.content_class, classification.deal_id)
+            
+        except Exception as e:
+            log.error("librarian_classification_failed", file=file_path.name, error=str(e))
+            return ("OTHER", None)
 
     def _sweep_inbox(self) -> list[dict]:
         """Sweeps staging/inbox/ for new files."""
