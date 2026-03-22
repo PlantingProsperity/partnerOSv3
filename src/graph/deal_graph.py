@@ -7,6 +7,7 @@ from src.graph.nodes.pinneo_gate import pinneo_gate_node
 from src.graph.nodes.scout import scout_node
 from src.graph.nodes.profiler import profiler_node
 from src.graph.nodes.manager import manager_node
+from src.graph.nodes.scribe import scribe_node
 
 def verify_gate(state: DealState) -> Literal["cfo_calculate", "__end__"]:
     """
@@ -14,6 +15,14 @@ def verify_gate(state: DealState) -> Literal["cfo_calculate", "__end__"]:
     """
     if state.get("cfo_verified"):
         return "cfo_calculate"
+    return "__end__"
+
+def manager_router(state: DealState) -> Literal["scribe", "__end__"]:
+    """
+    Conditional edge: routes to Scribe if deal is APPROVED, else ends the graph.
+    """
+    if state.get("verdict") == "APPROVE":
+        return "scribe"
     return "__end__"
 
 def build_graph() -> StateGraph:
@@ -27,6 +36,7 @@ def build_graph() -> StateGraph:
     builder.add_node("scout", scout_node)
     builder.add_node("profiler", profiler_node)
     builder.add_node("manager", manager_node)
+    builder.add_node("scribe", scribe_node)
     
     # Edges
     builder.add_edge(START, "librarian")
@@ -50,7 +60,18 @@ def build_graph() -> StateGraph:
     
     # Fan-in
     builder.add_edge(["scout", "profiler"], "manager")
-    builder.add_edge("manager", END)
+    
+    # Verdict Routing
+    builder.add_conditional_edges(
+        "manager",
+        manager_router,
+        {
+            "scribe": "scribe",
+            "__end__": END
+        }
+    )
+    
+    builder.add_edge("scribe", END)
     
     return builder
 
