@@ -20,8 +20,7 @@ def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None, res
         
         kwargs = {
             "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "api_key": os.environ.get("GEMINI_API_KEY")
+            "messages": [{"role": "user", "content": prompt}]
         }
         
         if response_format:
@@ -52,16 +51,25 @@ def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None, res
         _log_usage(agent=agent, model=model, call_type="text", success=0, error=str(e), deal_id=deal_id)
         raise
 
-def embed(text: str, agent: str) -> List[float]:
+def embed(text: str, agent: str, input_type: str = "passage") -> List[float]:
     """
-    Unified embedding interface. Always uses GEMINI_EMBEDDING_MODEL.
+    Unified embedding interface. Always uses config.EMBEDDING_MODEL.
     """
     try:
-        response = litellm.embedding(
-            model=config.EMBEDDING_MODEL,
-            input=[text],
-            api_key=os.environ.get("GEMINI_API_KEY")
-        )
+        kwargs = {
+            "model": config.EMBEDDING_MODEL,
+            "input": [text],
+        }
+        
+        # NVIDIA NIM models require input_type and encoding_format
+        if "nvidia" in config.EMBEDDING_MODEL:
+            kwargs["input_type"] = input_type
+            kwargs["encoding_format"] = "float"
+        else:
+            # For Gemini, we might need the API key explicitly if not picked up by LiteLLM
+            kwargs["api_key"] = os.environ.get("GEMINI_API_KEY")
+            
+        response = litellm.embedding(**kwargs)
         
         vector = response.data[0]['embedding']
         

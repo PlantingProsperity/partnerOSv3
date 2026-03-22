@@ -21,8 +21,8 @@ This document is a persistent, meticulous log of the build process, architectura
 
 **Goal:** Hybrid RAG end-to-end.
 **Key Decisions:**
-*   **ADR-S1-01: Embedding Model Shift.**
-    *   *Rationale:* The initially specified `gemini/text-embedding-004` returned a 404 error via LiteLLM for the v1beta API. Shifted to `gemini/gemini-embedding-2-preview` which provides 3072-dimensional vectors. Schema updated to `F32_BLOB(3072)`.
+*   **ADR-S1-01: Embedding Model Shift (NVIDIA NV-Embed-v1).**
+    *   *Rationale:* Initially shifted from `gemini/text-embedding-004` to `gemini-embedding-2-preview` due to API availability. Later, to fully utilize the high-performance NVIDIA NIM stack, shifted to `nvidia_nim/nvidia/nv-embed-v1`. This model is instruction-aware (requiring `input_type`="passage" for indexing and "query" for retrieval) and outputs highly accurate 4096-dimensional vectors. Schema updated to `F32_BLOB(4096)` and the `partner_os.db` was reset to apply the new vector constraints.
 *   **ADR-S1-02: RRF `LOW_CONFIDENCE_FLOOR` Calibration.**
     *   *Rationale:* The PRD specified a floor of `0.40`. However, with a Reciprocal Rank Fusion (RRF) constant of $k=60$ and two retrievers, the maximum possible score for a perfect Rank 1 match in both is $\approx 0.032$. Adjusted the floor to `0.02` to accurately reflect high confidence in a hybrid setup.
 *   **ADR-S1-03: Idempotent Rate-Limited Ingestion.**

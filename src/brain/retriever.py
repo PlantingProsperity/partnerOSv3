@@ -24,7 +24,7 @@ def retrieve(query: str, top_k: int = config.RAG_TOP_K) -> List[RetrievalChunk]:
     conn = get_connection()
     
     # 1. Vector Search (ANN)
-    query_vec = llm.embed(query, agent="retriever")
+    query_vec = llm.embed(query, agent="retriever", input_type="query")
     vec_blob = struct.pack("f" * len(query_vec), *query_vec)
     
     # Cosine similarity via sqlite-vec

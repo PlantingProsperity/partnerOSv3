@@ -42,8 +42,8 @@ QUALITY_MODEL: str = {
 }.get(PRIMARY_PROVIDER, GEMINI_PRO)
 
 # Embeddings NEVER change with PRIMARY_PROVIDER.
-EMBEDDING_MODEL: str = "gemini/gemini-embedding-2-preview"
-EMBEDDING_DIM:   int  = 3072
+EMBEDDING_MODEL: str = "nvidia_nim/nvidia/nv-embed-v1"
+EMBEDDING_DIM:   int  = 4096
 
 LOCAL_BASE_URL: str = os.environ.get("LOCAL_BASE_URL", "http://localhost:8080")
 
