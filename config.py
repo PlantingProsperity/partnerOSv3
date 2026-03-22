@@ -15,35 +15,33 @@ INBOX_DIR      = STAGING_DIR
 LISTS_DIR      = STAGING_DIR / "lists"
 DEALS_DIR      = BASE_DIR / "deals"
 
-# ── LLM Provider ──────────────────────────────────────────────────────────────
-PRIMARY_PROVIDER: str = os.environ.get("PRIMARY_PROVIDER", "nvidia")
+# ── LLM Provider (NVIDIA Native Architecture) ─────────────────────────────────
+# We have eliminated the generic PRIMARY_PROVIDER toggle.
+# Every agent is explicitly mapped to the most capable model for its specific task
+# on the NVIDIA API catalog to maximize performance and avoid rate limits.
 
-# Fast models (classification, transcription)
-GEMINI_FLASH: str = "gemini/gemini-flash-latest"
+AGENT_MODELS = {
+    # Vision & OCR tasks (SOTA Open Weights Vision)
+    "librarian": "nvidia_nim/qwen/qwen2.5-vl-72b-instruct",
+    
+    # Structured JSON Extraction & Instruction Following (Reliable Gold Standard)
+    "cfo_p1": "nvidia_nim/meta/llama-3.3-70b-instruct",
+    "profiler": "nvidia_nim/meta/llama-3.3-70b-instruct",
+    "prospect_sourcer": "nvidia_nim/meta/llama-3.3-70b-instruct",
+    
+    # Prose Generation
+    "scribe": "nvidia_nim/meta/llama-3.3-70b-instruct",
+    
+    # Deep Logical Reasoning & Strategy Synthesis (Grandmaster Reasoner)
+    "manager": "nvidia_nim/deepseek-ai/deepseek-r1"
+}
 
-# Quality models (extraction, reasoning)
-GEMINI_PRO:   str = "gemini/gemini-pro-latest"
+# Embeddings NEVER change to preserve vector math.
+EMBEDDING_MODEL: str = "nvidia_nim/nvidia/llama-nemotron-embed-1b-v2"
+EMBEDDING_DIM:   int  = 2048
 
-# Mapping for LiteLLM (unified interface)
-FAST_MODEL: str = {
-    "gemini":     GEMINI_FLASH,
-    "groq":       "groq/llama-3.3-70b-versatile",
-    "openrouter": "openrouter/deepseek/deepseek-chat-v3-0324:free",
-    "nvidia":     "nvidia_nim/meta/llama-3.1-8b-instruct",
-    "local":      "openai/local-model",
-}.get(PRIMARY_PROVIDER, GEMINI_FLASH)
-
-QUALITY_MODEL: str = {
-    "gemini":     GEMINI_PRO,
-    "groq":       "groq/llama-3.3-70b-versatile",
-    "openrouter": "openrouter/deepseek/deepseek-chat-v3-0324:free",
-    "nvidia":     "nvidia_nim/meta/llama-3.1-70b-instruct",
-    "local":      "openai/local-model",
-}.get(PRIMARY_PROVIDER, GEMINI_PRO)
-
-# Embeddings NEVER change with PRIMARY_PROVIDER.
-EMBEDDING_MODEL: str = "nvidia_nim/nvidia/nv-embed-v1"
-EMBEDDING_DIM:   int  = 4096
+# Reranking (Second stage retrieval)
+RERANK_MODEL:    str  = "nvidia_nim/nvidia/llama-nemotron-rerank-1b-v2"
 
 LOCAL_BASE_URL: str = os.environ.get("LOCAL_BASE_URL", "http://localhost:8080")
 

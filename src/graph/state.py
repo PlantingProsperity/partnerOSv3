@@ -22,6 +22,7 @@ class DealState(TypedDict):
     heuristic_failures: List[str]
     
     # ── Agent Payloads ──
+    financial_doc_paths: List[str]
     # Annotated with a merge function so agents can update specific keys 
     # without overwriting the entire dictionary.
     financials: Annotated[Dict[str, Any], merge_dicts]

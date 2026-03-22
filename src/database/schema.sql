@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS brain_chunks (
     chunk_index  INTEGER NOT NULL,
     content_hash TEXT    NOT NULL,
     embedded_at  TEXT    NOT NULL,
-    embedding    F32_BLOB(4096)
+    embedding    F32_BLOB(2048)
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS brain_chunks_fts

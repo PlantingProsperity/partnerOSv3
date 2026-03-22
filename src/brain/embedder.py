@@ -93,8 +93,7 @@ class BrainEmbedder:
                     (str(file_path), source_cat, chunk_text, i, content_hash, ts, blob)
                 )
                 
-                # Rate limit for Gemini Free Tier (100 RPM limit)
-                time.sleep(0.7)
+                # Rate limit REMOVED for NVIDIA NIM
                 
             # If we successfully embedded all chunks, NOW we delete the old ones and insert the new ones atomically
             self._delete_old_chunks(file_path)

@@ -4,8 +4,8 @@ from unittest.mock import patch
 from src.firehouse.sourcer import analyze_uncontacted_prospects
 from src.database.db import get_connection
 
-@patch("src.firehouse.sourcer.litellm.completion")
-def test_prospect_sourcer(mock_completion):
+@patch("src.firehouse.sourcer.llm.complete")
+def test_prospect_sourcer(mock_complete):
     # Setup mock LLM response matching the SourcerReport schema
     mock_response_json = """
     {
@@ -20,9 +20,7 @@ def test_prospect_sourcer(mock_completion):
       ]
     }
     """
-    mock_completion.return_value.choices = [
-        type("obj", (object,), {"message": type("obj", (object,), {"content": mock_response_json})()})
-    ]
+    mock_complete.return_value = mock_response_json
 
     # Setup dummy database data
     conn = get_connection()
@@ -43,9 +41,9 @@ def test_prospect_sourcer(mock_completion):
     assert report.top_picks[0].parcel_number == "P-TEST-123"
     assert "seller financing" in report.top_picks[0].suggested_strategy
     
-    # Assert it called Gemini Pro specifically
-    called_model = mock_completion.call_args[1].get("model")
-    assert "gemini-pro-latest" in called_model
+    # Assert it passed the correct agent identifier to the LLM gateway
+    called_agent = mock_complete.call_args[1].get("agent")
+    assert called_agent == "prospect_sourcer"
 
     # Cleanup
     conn.execute("DELETE FROM prospects WHERE parcel_number = 'P-TEST-123'")

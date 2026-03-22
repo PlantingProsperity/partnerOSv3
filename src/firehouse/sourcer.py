@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from src.database.db import get_connection
 from src.utils.logger import get_logger
-import litellm
+from src.utils import llm
 
 log = get_logger("firehouse.sourcer")
 
@@ -75,19 +75,16 @@ def analyze_uncontacted_prospects() -> Optional[SourcerReport]:
     """
     
     try:
-        # EXPLICIT OVERRIDE: We use Gemini Pro here regardless of config.PRIMARY_PROVIDER 
-        # because Llama 3.1 70B (128k context) will crash if the JSON is too large. 
-        # Gemini Pro handles 2M tokens.
-        import os
-        response = litellm.completion(
-            model="gemini/gemini-pro-latest",
-            messages=[{"role": "user", "content": prompt}],
-            response_format=SourcerReport,
-            api_key=os.environ.get("GEMINI_API_KEY")
+        # Use the system's configured QUALITY_MODEL (currently NVIDIA Llama 3.1 70B)
+        # The payload is ~33k tokens, which easily fits in Llama's 128k context window.
+        response_str = llm.complete(
+            prompt=prompt,
+            tier="quality",
+            agent="prospect_sourcer",
+            response_format=SourcerReport
         )
         
-        report_json = response.choices[0].message.content
-        report = SourcerReport.model_validate_json(report_json)
+        report = SourcerReport.model_validate_json(response_str)
         
         log.info("prospect_sourcing_complete", picks=len(report.top_picks))
         return report

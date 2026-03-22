@@ -25,6 +25,10 @@ if "checkpointer" not in st.session_state:
     import sqlite3
     import config
     from langgraph.checkpoint.sqlite import SqliteSaver
+    from src.firehouse.scheduler import start_firehouse
+    
+    # Start the background scheduling engine
+    start_firehouse()
     
     # Use check_same_thread=False because Streamlit runs in multiple threads
     conn = sqlite3.connect(str(config.CHECKPOINT_DB_PATH), check_same_thread=False)

@@ -1,20 +1,23 @@
 import os
 import datetime
 import litellm
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 import config
 from src.utils.logger import get_logger
 from src.database.db import get_connection
 
 log = get_logger("llm_gateway")
 
-def complete(prompt: str, tier: str, agent: str, deal_id: str | None = None, response_format: Any = None) -> str:
+def complete(prompt: str, agent: str, tier: str = None, deal_id: str | None = None, response_format: Any = None) -> str:
     """
-    Unified completion interface. Routes to FAST or QUALITY model
-    and logs token usage to SQLite.
+    Unified completion interface. Routes directly to the NVIDIA model 
+    specified for the given agent in config.py.
     """
-    model = config.FAST_MODEL if tier == "fast" else config.QUALITY_MODEL
-    
+    model = config.AGENT_MODELS.get(agent)
+    if not model:
+        log.warning("agent_model_not_found", agent=agent, fallback="nvidia_nim/meta/llama-3.3-70b-instruct")
+        model = "nvidia_nim/meta/llama-3.3-70b-instruct"
+        
     try:
         start_time = datetime.datetime.now()
         
@@ -86,6 +89,44 @@ def embed(text: str, agent: str, input_type: str = "passage") -> List[float]:
         
     except Exception as e:
         log.error("embedding_failed", agent=agent, error=str(e))
+        raise
+
+def rerank(query: str, passages: List[str], agent: str, top_n: int = 5) -> List[Dict[str, Any]]:
+    """
+    Unified reranking interface. Uses Cross-Encoder model to score relevance.
+    Returns: List of {"index": int, "score": float}
+    """
+    try:
+        # LiteLLM supports reranking for certain providers
+        # NVIDIA NIM rerank uses the /rerank endpoint
+        response = litellm.rerank(
+            model=config.RERANK_MODEL,
+            query=query,
+            documents=passages,
+            top_n=top_n
+        )
+        
+        # Format standardized output
+        results = []
+        for result in response.results:
+            results.append({
+                "index": result.index,
+                "score": result.relevance_score
+            })
+            
+        _log_usage(
+            agent=agent,
+            model=config.RERANK_MODEL,
+            call_type="rerank",
+            tokens_in=len(query.split()), # Rough estimation for logging
+            tokens_out=0,
+            success=1
+        )
+        
+        return results
+        
+    except Exception as e:
+        log.error("rerank_failed", agent=agent, error=str(e))
         raise
 
 def _log_usage(agent: str, model: str, call_type: str, 
