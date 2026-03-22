@@ -117,3 +117,8 @@ This document is a persistent, meticulous log of the build process, architectura
 ---
 
 ## Sprint S10: Firehouse (Not Started)
+
+**Goal:** Background scheduling engine for Workflow A.
+**Key Decisions:**
+*   **ADR-S10-01: Top-of-Funnel Raw Data Persistence.**
+    *   *Rationale:* Real estate CSVs (Propwire, Title Companies) contain dozens of valuable columns (Year Built, Bedrooms, Mortgage Balances) that do not fit neatly into our core `prospects` schema (which only demands Owner, Address, Parcel, Equity). Rather than constantly altering the SQL schema for every new CSV format, we added a `raw_data` JSON column to `prospects`. The `csv_intake.py` script now dumps the entire unadulterated Pandas row into this column. The `3_Prospect_Roster.py` UI dynamically unpacks this JSON and joins it to the view, giving the principal 100% visibility into the original data without compromising the rigid core schema required for the LangGraph agents.
