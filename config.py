@@ -21,19 +21,17 @@ DEALS_DIR      = BASE_DIR / "deals"
 # on the NVIDIA API catalog to maximize performance and avoid rate limits.
 
 AGENT_MODELS = {
-    # Vision & OCR tasks (SOTA Open Weights Vision)
-    "librarian": "nvidia_nim/qwen/qwen2.5-vl-72b-instruct",
-    
-    # Structured JSON Extraction & Instruction Following (Reliable Gold Standard)
-    "cfo_p1": "nvidia_nim/meta/llama-3.3-70b-instruct",
-    "profiler": "nvidia_nim/meta/llama-3.3-70b-instruct",
-    "prospect_sourcer": "nvidia_nim/meta/llama-3.3-70b-instruct",
-    
-    # Prose Generation
-    "scribe": "nvidia_nim/meta/llama-3.3-70b-instruct",
-    
-    # Deep Logical Reasoning & Strategy Synthesis (Grandmaster Reasoner)
-    "manager": "nvidia_nim/deepseek-ai/deepseek-r1"
+    # Specialized Document Parsing (OCR/Layout Optimized)
+    "librarian": "nvidia_nim/nvidia/nemotron-parse",
+
+    # Fast & Efficient Reasoning (8B Class)
+    "profiler": "nvidia_nim/nvidia/mistral-nemo-minitron-8b-8k-instruct",
+
+    # High-Performance Reasoning & Prose (Ultra 253B Class)
+    "cfo_p1": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
+    "prospect_sourcer": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
+    "scribe": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
+    "manager": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1"
 }
 
 # Embeddings NEVER change to preserve vector math.
