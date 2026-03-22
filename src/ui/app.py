@@ -14,6 +14,8 @@ st.markdown("""
 Welcome to the digital back-office. 
 
 Use the sidebar to navigate to:
+*   **Prospect Intake:** Upload bulk CSV lists from Propwire or Title Companies.
+*   **Prospect Roster:** View and filter the Top-of-Funnel database.
 *   **Deal Pipeline:** View active deals, trigger the LangGraph analysis, and see verdicts.
 *   **CFO Verification:** The Hallucination Firewall. Verify extracted financial data before allowing the OS to calculate math and generate an LOI.
 """)
