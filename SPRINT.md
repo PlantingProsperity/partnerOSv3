@@ -36,6 +36,6 @@
 | S6 | Scout + Profiler | ✅ COMPLETE | 2026-03-21 |
 | S7 | Manager Node | ✅ COMPLETE | 2026-03-21 |
 | S8 | Scribe Node | ✅ COMPLETE | 2026-03-21 |
-| S9 | Streamlit UI | ⬜ NOT STARTED | — |
+| S9 | Streamlit UI | ✅ COMPLETE | 2026-03-21 |
 | S10 | Firehouse | ⬜ NOT STARTED | — |
 | S11 | Learning Loop + Health | ⬜ NOT STARTED | — |

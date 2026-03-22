@@ -105,4 +105,13 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S9: Streamlit UI (Not Started)
+## Sprint S9: Streamlit UI (Completed 2026-03-21)
+
+**Goal:** Human-in-the-loop interaction and Deal Pipeline visibility.
+**Key Decisions:**
+*   **ADR-S9-01: Shared Checkpointer in Session State.**
+    *   *Rationale:* Streamlit reruns its entire script top-to-bottom on every button click. To maintain the connection to the active LangGraph threads (specifically for resuming interrupted graphs), the `SqliteSaver` checkpointer is initialized once in `app.py` and attached to `st.session_state`. This ensures the CFO Verification page can accurately query `state.next` to find paused graphs and use `graph.stream(Command(resume=True))` to wake them up without losing context.
+
+---
+
+## Sprint S10: Firehouse (Not Started)
