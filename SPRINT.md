@@ -35,7 +35,7 @@
 | S5 | pinneo_gate | ✅ COMPLETE | 2026-03-18 |
 | S6 | Scout + Profiler | ✅ COMPLETE | 2026-03-21 |
 | S7 | Manager Node | ✅ COMPLETE | 2026-03-21 |
-| S8 | Scribe Node | ⬜ NOT STARTED | — |
+| S8 | Scribe Node | ✅ COMPLETE | 2026-03-21 |
 | S9 | Streamlit UI | ⬜ NOT STARTED | — |
 | S10 | Firehouse | ⬜ NOT STARTED | — |
 | S11 | Learning Loop + Health | ⬜ NOT STARTED | — |

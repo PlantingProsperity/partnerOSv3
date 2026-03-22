@@ -96,4 +96,13 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S8: Scribe Node (Not Started)
+## Sprint S8: Scribe Node (Completed 2026-03-21)
+
+**Goal:** Generative drafting of formal communications based strictly on Manager instructions.
+**Key Decisions:**
+*   **ADR-S8-01: Conditional Routing to Scribe.**
+    *   *Rationale:* Updated `deal_graph.py` to add a conditional edge after the `manager_node`. If the Manager's verdict is `APPROVE`, the state flows to the `scribe_node` to draft an LOI. If the verdict is `KILL`, the graph terminates immediately. This ensures we don't waste LLM tokens drafting letters for dead deals, and keeps the Manager's context window purely focused on the analytical verdict.
+
+---
+
+## Sprint S9: Streamlit UI (Not Started)
