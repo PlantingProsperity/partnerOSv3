@@ -27,6 +27,8 @@ This document is a persistent, meticulous log of the build process, architectura
     *   *Rationale:* The PRD specified a floor of `0.40`. However, with a Reciprocal Rank Fusion (RRF) constant of $k=60$ and two retrievers, the maximum possible score for a perfect Rank 1 match in both is $\approx 0.032$. Adjusted the floor to `0.02` to accurately reflect high confidence in a hybrid setup.
 *   **ADR-S1-03: Idempotent Rate-Limited Ingestion.**
     *   *Rationale:* Hit the Gemini Free Tier Rate Limit (100 RPM). Added a `time.sleep(0.7)` delay to keep requests at ~85 RPM. Implemented atomic chunk counting to ensure partially embedded files (if interrupted by daily quota limits) are accurately resumed in future runs.
+*   **ADR-S1-04: True Atomic Ingestion (Bugfix).**
+    *   *Rationale:* The initial idempotent logic destructively deleted old chunks *before* starting the new embedding loop. When the daily API quota was hit mid-file, the system wiped the file from the database and crashed, losing data until the quota reset. Refactored `embedder.py` to accumulate vectors in memory and only perform the SQLite `DELETE`/`INSERT` transaction if all chunks for the file are embedded successfully.
 
 ---
 

@@ -3,6 +3,8 @@ import datetime
 import time
 from pathlib import Path
 from typing import List, Dict
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+import litellm
 import config
 from src.utils import llm
 from src.utils.logger import get_logger
@@ -15,6 +17,16 @@ class BrainEmbedder:
         self.conn = get_connection()
         self.chunk_size = config.CHUNK_SIZE
         self.chunk_overlap = config.CHUNK_OVERLAP
+
+    @retry(
+        wait=wait_exponential(multiplier=2, min=4, max=60),
+        stop=stop_after_attempt(5),
+        retry=retry_if_exception_type((litellm.RateLimitError, litellm.APIError, litellm.Timeout)),
+        reraise=True
+    )
+    def _safe_embed(self, chunk_text: str) -> List[float]:
+        """Wraps the LLM call with exponential backoff for rate limits."""
+        return llm.embed(chunk_text, agent="brain_embedder")
 
     def walk_and_embed(self, knowledge_path: Path):
         """
@@ -64,18 +76,35 @@ class BrainEmbedder:
                 # log.debug("skipping_file_no_change", file=str(file_path))
                 return
 
-            # Remove old chunks for this file (ensures atomicity if we resume)
-            self._delete_old_chunks(file_path)
+            log.info("processing_new_file", file=str(file_path), chunks=len(chunks))
 
+            # Store new embeddings in a temporary list first to avoid destructive failures
+            import struct
+            new_records = []
+            
             for i, chunk_text in enumerate(chunks):
-                # Call LLM for embedding via our unified gateway
-                embedding = llm.embed(chunk_text, agent="brain_embedder")
+                # Call LLM for embedding via our unified gateway, now with retry logic
+                embedding = self._safe_embed(chunk_text)
                 
-                # Write to brain_chunks (F32_BLOB for sqlite-vec)
-                self._insert_chunk(file_path, source_cat, chunk_text, i, content_hash, embedding)
+                blob = struct.pack("f" * len(embedding), *embedding)
+                ts = datetime.datetime.now(datetime.UTC).isoformat()
+                
+                new_records.append(
+                    (str(file_path), source_cat, chunk_text, i, content_hash, ts, blob)
+                )
                 
                 # Rate limit for Gemini Free Tier (100 RPM limit)
                 time.sleep(0.7)
+                
+            # If we successfully embedded all chunks, NOW we delete the old ones and insert the new ones atomically
+            self._delete_old_chunks(file_path)
+            
+            for record in new_records:
+                self.conn.execute("""
+                    INSERT INTO brain_chunks (source_path, source_cat, chunk_text, chunk_index, content_hash, embedded_at, embedding)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, record)
+            self.conn.commit()
                 
             log.info("file_embedded", file=str(file_path), chunks=len(chunks))
 
