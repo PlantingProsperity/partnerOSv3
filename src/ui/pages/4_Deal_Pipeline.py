@@ -1,8 +1,11 @@
 import streamlit as st
 import uuid
+import os
 import json
+from pathlib import Path
 from src.database.db import get_connection
 from src.graph.deal_graph import build_graph
+import config
 
 st.title("Deal Pipeline")
 
@@ -16,12 +19,24 @@ graph = build_graph().compile(checkpointer=st.session_state.checkpointer)
 # ── Create New Deal Form ──────────────────────────────────────────────────────
 with st.expander("➕ Start New Deal Analysis", expanded=False):
     with st.form("new_deal_form"):
-        address = st.text_input("Property Address")
-        parcel_number = st.text_input("Parcel Number (Optional, recommended for Scout)")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            address = st.text_input("Property Address")
+            parcel_number = st.text_input("Parcel Number (Optional, recommended for Scout)")
+        with col2:
+            uploaded_files = st.file_uploader("Upload Financials/OM", accept_multiple_files=True)
+            
         submit = st.form_submit_button("Trigger Pipeline")
         
         if submit and address:
             deal_id = f"deal_{uuid.uuid4().hex[:8]}"
+            
+            # 0. Save uploaded files to staging/inbox/
+            config.INBOX_DIR.mkdir(parents=True, exist_ok=True)
+            for file in uploaded_files:
+                file_path = config.INBOX_DIR / file.name
+                with open(file_path, "wb") as f:
+                    f.write(file.getbuffer())
             
             # 1. Create record in SQLite deals table
             conn = get_connection()
@@ -42,6 +57,7 @@ with st.expander("➕ Start New Deal Analysis", expanded=False):
                 "heuristic_flagged": False,
                 "heuristic_failures": [],
                 "financials": {},
+                "financial_doc_paths": [], # Librarian will populate this
                 "property_data": {},
                 "seller_archetype": "",
                 "profiler_confidence": 0,
@@ -53,12 +69,15 @@ with st.expander("➕ Start New Deal Analysis", expanded=False):
                 "loi_draft": ""
             }
             
-            config = {"configurable": {"thread_id": deal_id}}
+            config_dict = {"configurable": {"thread_id": deal_id}}
             
-            with st.spinner("Librarian and CFO Phase 1 executing..."):
+            with st.status(f"Pipeline started for {deal_id}...", expanded=True) as status:
                 # We use stream() to let it run until the first interrupt
-                for event in graph.stream(initial_state, config):
-                    pass # We just want it to reach the interrupt state
+                for event in graph.stream(initial_state, config_dict):
+                    for node_name, node_output in event.items():
+                        st.write(f"✅ Executed: **{node_name}**")
+                        
+                status.update(label="Paused at Hallucination Firewall", state="complete")
                     
             st.success(f"Deal {deal_id} created! It is now waiting for CFO Verification.")
             st.rerun()
@@ -92,14 +111,29 @@ else:
                 cols[2].page_link("pages/5_CFO_Verification.py", label="Go to Verification")
             elif not state.next: # Graph is finished
                 verdict = state.values.get("verdict", "UNKNOWN")
+                
                 if verdict == "APPROVE":
                     cols[1].success("✅ APPROVED")
-                    with st.expander("View LOI Draft"):
-                        st.markdown(state.values.get("loi_draft", "No draft generated."))
                 else:
                     cols[1].error("❌ KILLED")
-                    with st.expander("View Reasoning"):
-                        st.write(state.values.get("reasoning_text", ""))
-                        st.write("Scribe Instructions:", state.values.get("scribe_instructions", ""))
+                    
+                # Rich State Visibility
+                fin = state.values.get("financials", {})
+                prop = state.values.get("property_data", {})
+                
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("DSCR", f"{fin.get('dscr', 0.0):.2f}")
+                m2.metric("Cap Rate", f"{fin.get('cap_rate', 0.0)*100:.1f}%")
+                m3.metric("Hold Yrs", f"{prop.get('hold_years', 'N/A')}")
+                m4.metric("Archetype", f"{state.values.get('seller_archetype', 'N/A')}")
+                
+                with st.expander("Manager Verdict & Instructions"):
+                    st.write(state.values.get("reasoning_text", ""))
+                    st.markdown("**Instructions given to Scribe:**")
+                    st.write(state.values.get("scribe_instructions", ""))
+                    
+                if verdict == "APPROVE":
+                    with st.expander("View LOI Draft"):
+                        st.markdown(state.values.get("loi_draft", "No draft generated."))
             else:
                 cols[1].info(f"Processing: {state.next}")

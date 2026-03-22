@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import pandas as pd
 from src.database.db import get_connection
 from src.graph.deal_graph import build_graph
 from langgraph.types import Command
@@ -45,30 +46,56 @@ else:
                 
             draft_data = json.loads(draft_row["citations"])
             
-            # Display fields for verification
             st.markdown("Please verify the extracted numbers against their citations before approving.")
             
-            verified_data = {}
+            # Prepare data for st.data_editor
+            editor_data = []
+            citations_map = {}
             for field, field_data in draft_data.items():
                 if field_data is None:
-                    # Missing value/citation handling (ADR-S4-02)
-                    st.error(f"**{field.upper()}** — LLM failed to extract.")
-                    val = st.number_input(f"Manually enter {field}", key=f"{deal_id}_{field}", value=0.0)
-                    verified_data[field] = {"value": val, "citation": {"manual_override": True}}
+                    editor_data.append({"Field": field.replace("_", " ").title(), "Value": 0.0})
+                    citations_map[field] = {"file": "MISSING", "page": "N/A", "verbatim_text": "LLM failed to extract this field."}
                 else:
-                    val = field_data.get("value", 0.0)
-                    cite = field_data.get("citation", {})
+                    editor_data.append({"Field": field.replace("_", " ").title(), "Value": float(field_data.get("value", 0.0))})
+                    citations_map[field] = field_data.get("citation", {})
                     
-                    col1, col2 = st.columns([1, 2])
-                    with col1:
-                        verified_data[field] = {"value": st.number_input(f"{field.upper()}", key=f"{deal_id}_{field}", value=float(val)), "citation": cite}
-                    with col2:
+            df = pd.DataFrame(editor_data)
+            
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                st.markdown("**Editable Extraction**")
+                edited_df = st.data_editor(
+                    df,
+                    column_config={
+                        "Field": st.column_config.Column(disabled=True),
+                        "Value": st.column_config.NumberColumn(format="$%.2f")
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    key=f"editor_{deal_id}"
+                )
+            
+            with col2:
+                st.markdown("**Citations (The Proof)**")
+                for field, cite in citations_map.items():
+                    with st.expander(f"{field.replace('_', ' ').title()} Source"):
                         st.caption(f"**File:** {cite.get('file', 'UNKNOWN')} | **Page:** {cite.get('page', 'UNKNOWN')}")
                         st.info(f'"{cite.get("verbatim_text", "NO CITATION PROVIDED")}"')
             
             # Approve Action
             if st.button("✅ Approve Numbers & Calculate", key=f"approve_{deal_id}", type="primary"):
-                # 1. Write the verified data to SQLite
+                # 1. Rebuild the verified JSON structure from the edited dataframe
+                verified_data = {}
+                for index, row in edited_df.iterrows():
+                    # Convert Display Field back to JSON key
+                    original_field = row["Field"].replace(" ", "_").lower()
+                    verified_data[original_field] = {
+                        "value": row["Value"],
+                        "citation": citations_map[original_field]
+                    }
+                
+                # 2. Write the verified data to SQLite
                 conn.execute("""
                     INSERT INTO verified_financials (deal_id, data, verified_at)
                     VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -78,21 +105,24 @@ else:
                 conn.execute("UPDATE draft_financials SET status = 'VERIFIED' WHERE id = ?", (draft_row["id"],))
                 conn.commit()
                 
-                # 2. Get the new verified ID
+                # 3. Get the new verified ID
                 verified_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 
-                # 3. Resume the Graph!
+                # 4. Resume the Graph!
                 config = {"configurable": {"thread_id": deal_id}}
-                with st.spinner("Resuming Deal Pipeline..."):
+                with st.status("Resuming Deal Pipeline...", expanded=True) as status:
                     # We pass the verified ID back into the state, set cfo_verified=True, and tell it to resume.
                     for event in graph.stream(
                         Command(
                             resume=True, 
-                            update={"cfo_verified": True, "financials": {"verified_financials_id": verified_id}}
+                            update={"cfo_verified": True, "financials": {"verified_financials_id": verified_id}},
+                            goto="cfo_calculate"
                         ), 
                         config
                     ):
-                        pass # Stream to the end
+                        for node_name, node_output in event.items():
+                            st.write(f"✅ Executed: **{node_name}**")
+                    status.update(label="Pipeline Completed!", state="complete")
                 
                 st.success("Deal verified and pipeline resumed!")
                 st.rerun()
