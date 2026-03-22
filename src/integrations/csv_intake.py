@@ -18,30 +18,38 @@ def process_prospect_csv(file_path: Path) -> dict:
         return stats
 
     log.info("starting_csv_intake", path=str(file_path))
-    
     try:
+        # Try standard comma first (Propwire)
         df = pd.read_csv(file_path, dtype=str)
+        # If it only parsed one giant column, it's probably pipe-delimited (Clark County)
+        if len(df.columns) == 1:
+            df = pd.read_csv(file_path, sep="|", dtype=str)
+
         stats["total_rows"] = len(df)
-        
+
+        # Specific handler for Propwire split names
+        if 'Owner 1 First Name' in df.columns and 'Owner 1 Last Name' in df.columns:
+            # Handle NaNs gracefully by replacing with empty string before joining
+            first_names = df['Owner 1 First Name'].fillna('')
+            last_names = df['Owner 1 Last Name'].fillna('')
+            df['owner_name'] = first_names + ' ' + last_names
+            df['owner_name'] = df['owner_name'].str.strip()
+
         # Fuzzy Column Mapping
-        # Real-world CSVs have varied headers. We map them to our schema.
         col_mapping = {}
         for col in df.columns:
             clean_col = col.lower().strip().replace(" ", "_")
-            if any(x in clean_col for x in ["owner_name", "owner", "owner 1", "name"]):
+            if "owner_name" not in df.columns and any(x in clean_col for x in ["owner_name", "owner", "name"]):
                 col_mapping[col] = "owner_name"
-            elif any(x in clean_col for x in ["address", "property_address", "site_address"]):
+            elif any(x == clean_col for x in ["address", "property_address", "site_address"]):
                 col_mapping[col] = "address"
-            elif any(x in clean_col for x in ["parcel", "apn", "tax_id"]):
+            elif any(x == clean_col for x in ["parcel", "apn", "tax_id", "parcel_number"]):
                 col_mapping[col] = "parcel_number"
-            elif any(x in clean_col for x in ["equity", "equity_percent", "estimated_equity"]):
+            elif any(x in clean_col for x in ["equity", "estimated_equity"]):
                 col_mapping[col] = "equity_score"
-                
-        if not all(k in col_mapping.values() for k in ["owner_name", "address", "parcel_number"]):
-            log.warning("csv_missing_required_columns", found_mapped=list(col_mapping.values()))
-            
-        df = df.rename(columns=col_mapping)
-        
+
+        if col_mapping:
+            df = df.rename(columns=col_mapping)
         # Ensure minimum required columns exist
         for req in ["owner_name", "address", "parcel_number", "equity_score"]:
             if req not in df.columns:
