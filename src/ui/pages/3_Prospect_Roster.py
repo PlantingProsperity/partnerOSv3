@@ -17,7 +17,7 @@ col2.metric("High Equity Prospects", high_equity)
 st.divider()
 
 # Load data into a Pandas DataFrame for interactive display
-query = "SELECT id, owner_name, address, parcel_number, equity_score, pipeline_stage, source, created_at FROM prospects ORDER BY created_at DESC"
+query = "SELECT id, owner_name, address, parcel_number, equity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY created_at DESC"
 df = pd.read_sql_query(query, conn)
 conn.close()
 
@@ -26,6 +26,30 @@ if df.empty:
 else:
     # Make pipeline stage categorical for filtering in the UI
     df['pipeline_stage'] = df['pipeline_stage'].astype('category')
+    
+    # Unpack raw_data JSON into separate columns
+    import json
+    def parse_raw(val):
+        if pd.isna(val) or not val:
+            return {}
+        try:
+            return json.loads(val)
+        except:
+            return {}
+
+    raw_df = df['raw_data'].apply(parse_raw).apply(pd.Series)
+    
+    # Drop the original overlapping columns from raw_df to avoid duplicates,
+    # except we want to keep the rich data. Let's just drop the JSON column 
+    # and join the rest. We will prioritize our clean schema columns.
+    df = df.drop(columns=['raw_data'])
+    
+    # Identify extra columns from the raw CSV that aren't already in our core schema
+    extra_cols = [c for c in raw_df.columns if c not in df.columns]
+    
+    if extra_cols:
+        # Join the extra columns
+        df = pd.concat([df, raw_df[extra_cols]], axis=1)
     
     st.dataframe(
         df,

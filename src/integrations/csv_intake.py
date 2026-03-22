@@ -66,10 +66,11 @@ def process_prospect_csv(file_path: Path) -> dict:
         insert_query = """
             INSERT OR IGNORE INTO prospects (
                 owner_name, address, parcel_number, equity_score, 
-                pipeline_stage, source, created_at
-            ) VALUES (?, ?, ?, ?, 'IDENTIFIED', 'csv_import', ?)
+                pipeline_stage, source, created_at, raw_data
+            ) VALUES (?, ?, ?, ?, 'IDENTIFIED', 'csv_import', ?, ?)
         """
         
+        import json
         for r in records:
             if not r['parcel_number'] or pd.isna(r['parcel_number']):
                 stats["errors"] += 1
@@ -86,13 +87,18 @@ def process_prospect_csv(file_path: Path) -> dict:
                         elif val < 20: equity_cat = 'LOW'
                     except ValueError:
                         pass
+            
+            # Serialize the entire raw row (handling NaNs)
+            clean_row = {k: (v if pd.notna(v) else None) for k, v in r.items()}
+            raw_json = json.dumps(clean_row)
                         
             cursor.execute(insert_query, (
                 str(r['owner_name']), 
                 str(r['address']), 
                 str(r['parcel_number']), 
                 equity_cat, 
-                now
+                now,
+                raw_json
             ))
             
             if cursor.rowcount > 0:
