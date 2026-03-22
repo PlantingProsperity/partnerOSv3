@@ -101,3 +101,544 @@ For `use_container_width=True`, use `width='stretch'`. For `use_container_width=
 `use_container_width` will be removed after 2025-12-31.
 
 For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+[2m2026-03-22T21:26:55.800228Z[0m [[32m[1minfo     [0m] [1mfirehouse_scheduler_started   [0m
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[2m2026-03-22T21:34:00.835969Z[0m [[32m[1minfo     [0m] [1mfirehouse_scheduler_started   [0m
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2664 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2661 [0m[2m│   │   [0margs = [] [94mif[0m params [95mis[0m [94mNone[0m [94melse[0m [params]                             [31m [0m
+[31m [0m   [2m2662 [0m[2m│   │   [0mcur = [96mself[0m.con.cursor()                                               [31m [0m
+[31m [0m   [2m2663 [0m[2m│   │   [0m[94mtry[0m:                                                                  [31m [0m
+[31m [0m [31m❱ [0m2664 [2m│   │   │   [0mcur.execute(sql, *args)                                           [31m [0m
+[31m [0m   [2m2665 [0m[2m│   │   │   [0m[94mreturn[0m cur                                                        [31m [0m
+[31m [0m   [2m2666 [0m[2m│   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                                              [31m [0m
+[31m [0m   [2m2667 [0m[2m│   │   │   [0m[94mtry[0m:                                                              [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mOperationalError: [0mno such column: raw_data
+
+[3mThe above exception was the direct cause of the following exception:[0m
+
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m3_Prospect[0m [31m [0m
+[31m [0m [1m_Roster.py[0m:21 in <module>                                                            [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m18 [0m                                                                                [31m [0m
+[31m [0m   [2m19 [0m[2m# Load data into a Pandas DataFrame for interactive display[0m                     [31m [0m
+[31m [0m   [2m20 [0mquery = [33m"[0m[33mSELECT id, owner_name, address, parcel_number, equity_score, pipeline_[0m [31m [0m
+[31m [0m [31m❱ [0m21 df = [1;4mpd.read_sql_query(query, conn)[0m                                             [31m [0m
+[31m [0m   [2m22 [0mconn.close()                                                                    [31m [0m
+[31m [0m   [2m23 [0m                                                                                [31m [0m
+[31m [0m   [2m24 [0m[94mif[0m df.empty:                                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:528 in read_sql_query                                   [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m 525 [0m[2m│   [0m[94massert[0m dtype_backend [95mis[0m [95mnot[0m lib.no_default                                [31m [0m
+[31m [0m   [2m 526 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m 527 [0m[2m│   [0m[94mwith[0m pandasSQL_builder(con) [94mas[0m pandas_sql:                                [31m [0m
+[31m [0m [31m❱ [0m 528 [2m│   │   [0m[94mreturn[0m [1;4mpandas_sql.read_query([0m                                         [31m [0m
+[31m [0m   [2m 529 [0m[2m│   │   │   [0m[1;4msql,[0m                                                              [31m [0m
+[31m [0m   [2m 530 [0m[2m│   │   │   [0m[1;4mindex_col=index_col,[0m                                              [31m [0m
+[31m [0m   [2m 531 [0m[2m│   │   │   [0m[1;4mparams=params,[0m                                                    [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2728 in read_query                                      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2725 [0m[2m│   │   [0mdtype: DtypeArg | [94mNone[0m = [94mNone[0m,                                        [31m [0m
+[31m [0m   [2m2726 [0m[2m│   │   [0mdtype_backend: DtypeBackend | Literal[[33m"[0m[33mnumpy[0m[33m"[0m] = [33m"[0m[33mnumpy[0m[33m"[0m,             [31m [0m
+[31m [0m   [2m2727 [0m[2m│   [0m) -> DataFrame | Iterator[DataFrame]:                                     [31m [0m
+[31m [0m [31m❱ [0m2728 [2m│   │   [0mcursor = [1;4;96mself[0m[1;4m.execute(sql, params)[0m                                    [31m [0m
+[31m [0m   [2m2729 [0m[2m│   │   [0mcolumns = [col_desc[[94m0[0m] [94mfor[0m col_desc [95min[0m cursor.description]            [31m [0m
+[31m [0m   [2m2730 [0m[2m│   │   [0m                                                                      [31m [0m
+[31m [0m   [2m2731 [0m[2m│   │   [0m[94mif[0m chunksize [95mis[0m [95mnot[0m [94mNone[0m:                                             [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/pandas/io/[0m[1msql.py[0m:2676 in execute                                         [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m2673 [0m[2m│   │   │   │   [0m[94mraise[0m ex [94mfrom[0m[90m [0m[4;96minner_exc[0m                                       [31m [0m
+[31m [0m   [2m2674 [0m[2m│   │   │   [0m                                                                  [31m [0m
+[31m [0m   [2m2675 [0m[2m│   │   │   [0mex = DatabaseError([33mf[0m[33m"[0m[33mExecution failed on sql [0m[33m'[0m[33m{[0msql[33m}[0m[33m'[0m[33m: [0m[33m{[0mexc[33m}[0m[33m"[0m)     [31m [0m
+[31m [0m [31m❱ [0m2676 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m ex [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;96mexc[0m                                                 [31m [0m
+[31m [0m   [2m2677 [0m[2m│   [0m                                                                          [31m [0m
+[31m [0m   [2m2678 [0m[2m│   [0m[1;95m@staticmethod[0m                                                             [31m [0m
+[31m [0m   [2m2679 [0m[2m│   [0m[94mdef[0m[90m [0m[92m_query_iterator[0m(                                                      [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mDatabaseError: [0mExecution failed on sql [32m'SELECT id, owner_name, address, parcel_number, [0m
+[32mequity_score, pipeline_stage, source, created_at, raw_data FROM prospects ORDER BY [0m
+[32mcreated_at DESC'[0m: no such column: raw_data

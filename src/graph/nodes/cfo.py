@@ -48,8 +48,9 @@ def _parse_document(file_path: Path) -> Union[str, Any]:
     try:
         if ext == '.csv':
             df = pd.read_csv(file_path)
-            return f"File: {file_path.name}\n\n{df.to_markdown()}"
-            
+            # Limit rows to prevent prompt overflow during live tests
+            df = df.head(5)
+            return f"File: {file_path.name} (First 5 rows)\n\n{df.to_markdown()}"            
         elif ext == '.xlsx':
             df = pd.read_excel(file_path)
             return f"File: {file_path.name}\n\n{df.to_markdown()}"
@@ -95,7 +96,9 @@ def cfo_extract_node(state: DealState) -> dict:
     else:
         try:
             doc_path = Path(financial_doc_paths[0])
+            log.info("cfo_parsing_document", path=str(doc_path))
             document_content = _parse_document(doc_path)
+            log.info("cfo_document_parsed", length=len(str(document_content)))
             
             prompt = """
             You are an expert commercial real estate underwriter. 
@@ -108,7 +111,9 @@ def cfo_extract_node(state: DealState) -> dict:
             """.format(doc=document_content)
             
             import json
+            import re
             
+            log.info("cfo_calling_llm_live", agent="cfo_p1")
             response_str = llm.complete(
                 prompt=prompt,
                 tier="quality",
@@ -116,8 +121,15 @@ def cfo_extract_node(state: DealState) -> dict:
                 deal_id=deal_id,
                 response_format=CFOExtraction
             )
+            log.info("cfo_llm_responded", length=len(response_str))
             
+            # Robust JSON Extraction
+            json_match = re.search(r"\{.*\}", response_str, re.DOTALL)
+            if json_match:
+                response_str = json_match.group()
+                
             extraction = CFOExtraction.model_validate_json(response_str)
+            log.info("cfo_extraction_validated")
             
         except Exception as e:
             log.error("cfo_extraction_failed", deal_id=deal_id, error=str(e))
@@ -161,9 +173,16 @@ def cfo_calculate_node(state: DealState) -> dict:
     data = json.loads(row["data"])
     
     # 2. Pure Python Deterministic Math
-    noi = data.get("noi", {}).get("value", 0)
-    price = data.get("asking_price", {}).get("value", 1) # prevent div by zero
-    ads = data.get("annual_debt_service", {}).get("value", 1)
+    def safe_get(d, key):
+        # Handles cases where the field is missing or is None
+        val_obj = d.get(key)
+        if val_obj is None:
+            return 0
+        return val_obj.get("value", 0)
+
+    noi = safe_get(data, "noi")
+    price = safe_get(data, "asking_price") or 1 # prevent div by zero
+    ads = safe_get(data, "annual_debt_service") or 1
     
     cap_rate = noi / price if price else 0
     dscr = noi / ads if ads else 0

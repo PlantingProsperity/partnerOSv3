@@ -21,17 +21,15 @@ DEALS_DIR      = BASE_DIR / "deals"
 # on the NVIDIA API catalog to maximize performance and avoid rate limits.
 
 AGENT_MODELS = {
-    # Specialized Document Parsing (OCR/Layout Optimized)
-    "librarian": "nvidia_nim/nvidia/nemotron-parse",
-
-    # Fast & Efficient Reasoning (8B Class)
-    "profiler": "nvidia_nim/nvidia/mistral-nemo-minitron-8b-8k-instruct",
-
-    # High-Performance Reasoning & Prose (Ultra 253B Class)
-    "cfo_p1": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
-    "prospect_sourcer": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
-    "scribe": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1",
-    "manager": "nvidia_nim/nvidia/llama-3.1-nemotron-ultra-253b-v1"
+    # Fast & Efficient Reasoning (Confirmed Stable 8B)
+    "librarian": "nvidia_nim/meta/llama-3.1-8b-instruct",
+    "profiler": "nvidia_nim/meta/llama-3.1-8b-instruct",
+    
+    # High-Performance Reasoning & JSON Accuracy
+    "cfo_p1": "nvidia_nim/meta/llama-3.3-70b-instruct",
+    "prospect_sourcer": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
+    "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
+    "manager": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
 }
 
 # Embeddings NEVER change to preserve vector math.

@@ -15,8 +15,14 @@ import config
 log = get_logger("agent.librarian")
 
 class LibrarianClassification(BaseModel):
-    content_class: str = Field(description="One of: FINANCIAL_DOCUMENT, SELLER_CORRESPONDENCE, TITLE_REPORT, INSPECTION_REPORT, FIELD_NOTES, MUNICIPAL_RECORD, OFFERING_MEMORANDUM, LEGAL_DOCUMENT, OTHER")
-    deal_id: Optional[str] = Field(None, description="The specific Deal ID if clearly identifiable in the document, else null.")
+    content_class: str = Field(
+        description="One of: FINANCIAL_DOCUMENT, SELLER_CORRESPONDENCE, TITLE_REPORT, INSPECTION_REPORT, FIELD_NOTES, MUNICIPAL_RECORD, OFFERING_MEMORANDUM, LEGAL_DOCUMENT, OTHER",
+        validation_alias="taxonomy_class"
+    )
+    deal_id: Optional[str] = Field(
+        None, 
+        description="The specific Deal ID if clearly identifiable in the document, else null."
+    )
 
 class Librarian:
     def __init__(self):
@@ -58,17 +64,23 @@ class Librarian:
             prompt = f"Analyze the following document and classify it into one of our taxonomy classes. Also, extract the Deal ID if it is explicitly mentioned (otherwise return null).\n\nDocument:\n{document_content}"
             
             import json
+            import re
+            
             response_str = llm.complete(
                 prompt=prompt,
                 tier="fast",
                 agent="librarian",
-                # Pass the Pydantic schema to force structured output
-                # Note: LiteLLM handles the translation to the provider's native format
+                response_format=LibrarianClassification
             )
             
-            # The response string should be a JSON matching our schema
-            classification = LibrarianClassification.model_validate_json(response_str)
-            return (classification.content_class, classification.deal_id)
+            # Flexible JSON Parsing: NVIDIA models often hallucinate key names
+            data = json.loads(response_str)
+            
+            # Map various possible keys to our internal fields
+            content_class = data.get("content_class") or data.get("taxonomy_class") or data.get("taxonomy") or data.get("class") or "OTHER"
+            deal_id = data.get("deal_id") or data.get("dealid")
+            
+            return (str(content_class).upper(), deal_id)
             
         except Exception as e:
             log.error("librarian_classification_failed", file=file_path.name, error=str(e))

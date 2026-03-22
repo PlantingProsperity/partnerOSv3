@@ -8,10 +8,22 @@ from src.database.db import get_connection
 log = get_logger("agent.manager")
 
 class ManagerVerdict(BaseModel):
-    verdict: str = Field(description="Strictly 'APPROVE' or 'KILL'")
-    confidence: int = Field(description="Confidence score from 0 to 100")
-    reasoning_text: str = Field(description="The analytical reasoning behind the verdict.")
-    scribe_instructions: str = Field(description="If APPROVE, provide detailed bullet points for the Scribe on how to draft the LOI (terms, tone, seller-financing structure). If KILL, provide a brief summary of why.")
+    verdict: str = Field(
+        description="Strictly 'APPROVE' or 'KILL'",
+        validation_alias="decision"
+    )
+    confidence: int = Field(
+        description="Confidence score from 0 to 100",
+        validation_alias="confidence_level"
+    )
+    reasoning_text: str = Field(
+        description="The analytical reasoning behind the verdict.",
+        validation_alias="justification"
+    )
+    scribe_instructions: str = Field(
+        description="If APPROVE, provide detailed bullet points for the Scribe on how to draft the LOI (terms, tone, seller-financing structure). If KILL, provide a brief summary of why.",
+        validation_alias="instructions"
+    )
 
 def manager_node(state: DealState) -> dict:
     """
@@ -58,6 +70,7 @@ def manager_node(state: DealState) -> dict:
         """
         
     try:
+        import re
         # 2. Call LLM
         response_str = llm.complete(
             prompt=prompt,
@@ -67,7 +80,17 @@ def manager_node(state: DealState) -> dict:
             response_format=ManagerVerdict
         )
         
-        verdict_data = ManagerVerdict.model_validate_json(response_str)
+        if not response_str:
+            log.error("manager_received_empty_response", deal_id=deal_id)
+            return {"verdict": "ERROR", "status": "UNDER_REVIEW"}
+
+        # Flexible JSON Parsing: NVIDIA models often hallucinate key names
+        data = json.loads(response_str)
+        
+        verdict = data.get("verdict") or data.get("decision") or "KILL"
+        confidence = data.get("confidence") or data.get("confidence_level") or 0
+        reasoning = data.get("reasoning_text") or data.get("justification") or "No reasoning provided."
+        instructions = data.get("scribe_instructions") or data.get("instructions") or ""
         
         # 3. Write to SQLite
         conn = get_connection()
@@ -76,20 +99,20 @@ def manager_node(state: DealState) -> dict:
             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         """, (
             deal_id, 
-            verdict_data.verdict, 
-            verdict_data.confidence, 
-            verdict_data.reasoning_text, 
-            verdict_data.scribe_instructions
+            str(verdict).upper(), 
+            int(confidence), 
+            str(reasoning), 
+            str(instructions)
         ))
         conn.commit()
         conn.close()
         
         return {
-            "verdict": verdict_data.verdict,
-            "manager_confidence": verdict_data.confidence,
-            "reasoning_text": verdict_data.reasoning_text,
-            "scribe_instructions": verdict_data.scribe_instructions,
-            "status": "APPROVED" if verdict_data.verdict == "APPROVE" else "KILLED"
+            "verdict": str(verdict).upper(),
+            "manager_confidence": int(confidence),
+            "reasoning_text": str(reasoning),
+            "scribe_instructions": str(instructions),
+            "status": "APPROVED" if str(verdict).upper() == "APPROVE" else "KILLED"
         }
         
     except Exception as e:
