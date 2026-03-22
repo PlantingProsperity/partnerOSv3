@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR       = Path(__file__).parent.resolve()
@@ -13,7 +16,7 @@ LISTS_DIR      = STAGING_DIR / "lists"
 DEALS_DIR      = BASE_DIR / "deals"
 
 # ── LLM Provider ──────────────────────────────────────────────────────────────
-PRIMARY_PROVIDER: str = os.environ.get("PRIMARY_PROVIDER", "gemini")
+PRIMARY_PROVIDER: str = os.environ.get("PRIMARY_PROVIDER", "nvidia")
 
 # Fast models (classification, transcription)
 GEMINI_FLASH: str = "gemini/gemini-flash-latest"
@@ -26,6 +29,7 @@ FAST_MODEL: str = {
     "gemini":     GEMINI_FLASH,
     "groq":       "groq/llama-3.3-70b-versatile",
     "openrouter": "openrouter/deepseek/deepseek-chat-v3-0324:free",
+    "nvidia":     "nvidia_nim/meta/llama-3.1-8b-instruct",
     "local":      "openai/local-model",
 }.get(PRIMARY_PROVIDER, GEMINI_FLASH)
 
@@ -33,6 +37,7 @@ QUALITY_MODEL: str = {
     "gemini":     GEMINI_PRO,
     "groq":       "groq/llama-3.3-70b-versatile",
     "openrouter": "openrouter/deepseek/deepseek-chat-v3-0324:free",
+    "nvidia":     "nvidia_nim/meta/llama-3.1-70b-instruct",
     "local":      "openai/local-model",
 }.get(PRIMARY_PROVIDER, GEMINI_PRO)
 
