@@ -21,15 +21,17 @@ DEALS_DIR      = BASE_DIR / "deals"
 # on the NVIDIA API catalog to maximize performance and avoid rate limits.
 
 AGENT_MODELS = {
-    # Fast & Efficient Reasoning (Confirmed Stable 8B)
-    "librarian": "nvidia_nim/meta/llama-3.1-8b-instruct",
-    "profiler": "nvidia_nim/meta/llama-3.1-8b-instruct",
+    # Fast & Efficient Reasoning (Classification & Support)
+    "librarian": "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct", # Native multimodal ingestion
+    "profiler": "nvidia_nim/nvidia/mistral-nemo-minitron-8b-8k-instruct", # Rapid RAG analysis
     
-    # High-Performance Reasoning & JSON Accuracy
-    "cfo_p1": "nvidia_nim/meta/llama-3.3-70b-instruct",
-    "prospect_sourcer": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
-    "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
-    "manager": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+    # High-Throughput Agentic Reasoning (The "Forensic" & "Firehouse" Tiers)
+    "cfo_p1": "nvidia_nim/qwen/qwen3-coder-480b-a35b-instruct", # Rigid JSON adherence
+    "prospect_sourcer": "nvidia_nim/meta/llama-4-scout-17b-16e-instruct", # 10M token context window
+    "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b", # Fast agentic prose
+    
+    # The Frontier Generalists (The "Principal" Tier)
+    "manager": "nvidia_nim/deepseek-ai/deepseek-v3.1-terminus" # Deep logic synthesis
 }
 
 # Embeddings NEVER change to preserve vector math.

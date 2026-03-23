@@ -1,17 +1,19 @@
 import os
 import datetime
 import litellm
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Union
 import config
 from src.utils.logger import get_logger
 from src.database.db import get_connection
 
 log = get_logger("llm_gateway")
 
-def complete(prompt: str, agent: str, tier: str = None, deal_id: str | None = None, response_format: Any = None) -> str:
+def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = None, deal_id: str | None = None, response_format: Any = None) -> str:
     """
     Unified completion interface. Routes directly to the NVIDIA model 
     specified for the given agent in config.py.
+    
+    Adheres to the PartnerOS Deployment Matrix (Temperature=0 for forensic tasks).
     """
     model = config.AGENT_MODELS.get(agent)
     if not model:
@@ -21,25 +23,36 @@ def complete(prompt: str, agent: str, tier: str = None, deal_id: str | None = No
     try:
         start_time = datetime.datetime.now()
         
-        # System prompt to force JSON but ENCOURAGE detailed reasoning within keys
-        system_prompt = (
-            "You are a highly analytical JSON-only response engine. "
-            "Return strictly valid JSON matching the requested schema. "
-            "IMPORTANT: Provide deep, detailed reasoning within the text fields of the JSON. "
-            "Do NOT include conversational preamble, thinking blocks, or markdown backticks outside the JSON."
-        )
+        messages = []
+        
+        # 1. Add System Prompt (Only for text-based reasoning tasks)
+        if isinstance(prompt, str):
+            system_prompt = (
+                "You are a highly analytical JSON-only response engine. "
+                "Return strictly valid JSON matching the requested schema. "
+                "IMPORTANT: Provide deep, detailed reasoning within the text fields of the JSON. "
+                "Do NOT include conversational preamble, thinking blocks, or markdown backticks outside the JSON."
+            )
+            messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+        else:
+            # For multimodal (Llama 4 Maverick), the prompt is already a list of message dicts
+            messages = [{"role": "user", "content": prompt}]
         
         kwargs = {
             "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "timeout": 60 
+            "messages": messages,
+            "timeout": 120 # Increased for multimodal processing
         }
         
-        if response_format:
-            # Tell LiteLLM to enforce the Pydantic schema
+        # 2. Enforce Forensic Parameters (ADR-006 / §13.2)
+        if agent in ["cfo_p1", "manager"]:
+            kwargs["temperature"] = 0.0
+            kwargs["top_p"] = 0.01 
+        
+        # 3. Selective Response Format (JSON Grammar)
+        # DeepSeek and some Qwen models on NIM reject strict response_format grammar
+        if response_format and "deepseek" not in model.lower() and "qwen" not in model.lower():
             kwargs["response_format"] = response_format
             
         response = litellm.completion(**kwargs)
@@ -51,7 +64,7 @@ def complete(prompt: str, agent: str, tier: str = None, deal_id: str | None = No
         _log_usage(
             agent=agent,
             model=model,
-            call_type="text",
+            call_type="text" if isinstance(prompt, str) else "multimodal",
             tokens_in=response.usage.prompt_tokens,
             tokens_out=response.usage.completion_tokens,
             latency_ms=duration,

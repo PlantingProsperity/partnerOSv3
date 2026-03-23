@@ -84,13 +84,32 @@ def manager_node(state: DealState) -> dict:
             log.error("manager_received_empty_response", deal_id=deal_id)
             return {"verdict": "ERROR", "status": "UNDER_REVIEW"}
 
-        # Flexible JSON Parsing: NVIDIA models often hallucinate key names
+        # Aggressive JSON Extraction (ADR-006 Hardening)
+        json_match = re.search(r"(\{.*\})", response_str, re.DOTALL)
+        if json_match:
+            response_str = json_match.group(1)
+        
+        # Additional cleanup
+        response_str = response_str.replace("```json", "").replace("```", "").strip()
+        
+        # Flexible JSON Parsing: NVIDIA models often hallucinate key names or nesting
         data = json.loads(response_str)
         
         verdict = data.get("verdict") or data.get("decision") or "KILL"
         confidence = data.get("confidence") or data.get("confidence_level") or 0
-        reasoning = data.get("reasoning_text") or data.get("justification") or "No reasoning provided."
-        instructions = data.get("scribe_instructions") or data.get("instructions") or ""
+        
+        # Handle cases where reasoning/instructions might be nested objects or lists
+        reasoning = data.get("reasoning_text") or data.get("justification") or data.get("reasoning")
+        if isinstance(reasoning, (dict, list)):
+            reasoning = json.dumps(reasoning, indent=2)
+        elif not reasoning:
+            reasoning = "No reasoning provided."
+            
+        instructions = data.get("scribe_instructions") or data.get("instructions")
+        if isinstance(instructions, (dict, list)):
+            instructions = json.dumps(instructions, indent=2)
+        elif not instructions:
+            instructions = ""
         
         # 3. Write to SQLite
         conn = get_connection()

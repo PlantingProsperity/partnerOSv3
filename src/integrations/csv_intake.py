@@ -8,53 +8,90 @@ log = get_logger("integration.csv_intake")
 
 def process_prospect_csv(file_path: Path) -> dict:
     """
-    Parses a Propwire/Title Company CSV and inserts records into the prospects table.
+    Parses a Propwire/Title Company CSV or XLSX and inserts records into the prospects table.
     Deduplicates based on parcel_number.
     """
     stats = {"total_rows": 0, "inserted": 0, "duplicates_skipped": 0, "errors": 0}
     
     if not file_path.exists():
-        log.error("csv_missing", path=str(file_path))
+        log.error("file_missing", path=str(file_path))
         return stats
 
-    log.info("starting_csv_intake", path=str(file_path))
+    log.info("starting_file_intake", path=str(file_path))
     try:
-        # Try standard comma first (Propwire)
-        df = pd.read_csv(file_path, dtype=str)
-        # If it only parsed one giant column, it's probably pipe-delimited (Clark County)
-        if len(df.columns) == 1:
-            df = pd.read_csv(file_path, sep="|", dtype=str)
+        ext = file_path.suffix.lower()
+        if ext == '.xlsx':
+            df = pd.read_excel(file_path, dtype=str)
+        else:
+            # Try standard comma first (Propwire)
+            df = pd.read_csv(file_path, dtype=str)
+            # If it only parsed one giant column, it's probably pipe-delimited (Clark County)
+            if len(df.columns) == 1:
+                df = pd.read_csv(file_path, sep="|", dtype=str)
 
         stats["total_rows"] = len(df)
 
-        # Specific handler for Propwire split names
-        if 'Owner 1 First Name' in df.columns and 'Owner 1 Last Name' in df.columns:
-            # Handle NaNs gracefully by replacing with empty string before joining
-            first_names = df['Owner 1 First Name'].fillna('')
-            last_names = df['Owner 1 Last Name'].fillna('')
-            df['owner_name'] = first_names + ' ' + last_names
-            df['owner_name'] = df['owner_name'].str.strip()
+        # 1. Specific handler for Split Names (Propwire & Skamania)
+        # Propwire: 'Owner 1 First Name', 'Owner 1 Last Name'
+        # Skamania: '1st Owner\'s First Name', '1st Owner\'s Last Name'
+        name_combos = [
+            ('Owner 1 First Name', 'Owner 1 Last Name'),
+            ("1st Owner's First Name", "1st Owner's Last Name")
+        ]
+        for first_key, last_key in name_combos:
+            if first_key in df.columns and last_key in df.columns:
+                df['owner_name'] = df[first_key].fillna('') + ' ' + df[last_key].fillna('')
+                df['owner_name'] = df['owner_name'].str.strip()
+                break
 
-        # Fuzzy Column Mapping
+        # 2. Fuzzy Column Mapping
         col_mapping = {}
         for col in df.columns:
-            clean_col = col.lower().strip().replace(" ", "_")
-            if "owner_name" not in df.columns and any(x in clean_col for x in ["owner_name", "owner", "name"]):
-                col_mapping[col] = "owner_name"
-            elif any(x == clean_col for x in ["address", "property_address", "site_address"]):
-                col_mapping[col] = "address"
-            elif any(x == clean_col for x in ["parcel", "apn", "tax_id", "parcel_number"]):
+            clean_col = col.lower().strip().replace(" ", "_").replace("/", "").replace("'", "")
+            
+            # Parcel Number
+            if any(x == clean_col for x in ["parcelid", "apn", "parcel", "tax_id", "parcel_number", "apn__parcel_number_(text)", "apn__parcel_number_text"]):
                 col_mapping[col] = "parcel_number"
+            
+            # Address
+            elif any(x == clean_col for x in ["siteaddr", "site_address", "address", "property_address"]):
+                col_mapping[col] = "address"
+                
+            # Owner Name
+            elif "owner_name" not in df.columns and any(x == clean_col for x in ["ownernm", "owner_name", "owner"]):
+                col_mapping[col] = "owner_name"
+                
+            # Equity
             elif any(x in clean_col for x in ["equity", "estimated_equity"]):
                 col_mapping[col] = "equity_score"
+                
+            # Sale Date (for hold_years calculation)
+            elif any(x == clean_col for x in ["saledt", "purchase_date", "sale_date"]):
+                col_mapping[col] = "sale_date"
 
         if col_mapping:
             df = df.rename(columns=col_mapping)
+            
         # Ensure minimum required columns exist
         for req in ["owner_name", "address", "parcel_number", "equity_score"]:
             if req not in df.columns:
                 df[req] = "UNKNOWN" if req == "equity_score" else ""
                 
+        # 3. Calculate Hold Years (PRD 5.1)
+        current_year = datetime.datetime.now().year
+        if 'sale_date' in df.columns:
+            def calc_hold(val):
+                try:
+                    dt = pd.to_datetime(val, errors='coerce')
+                    if pd.notna(dt):
+                        return current_year - dt.year
+                except:
+                    pass
+                return None
+            df['hold_years'] = df['sale_date'].apply(calc_hold)
+        else:
+            df['hold_years'] = None
+
         records = df.to_dict('records')
         
         conn = get_connection()
@@ -65,21 +102,27 @@ def process_prospect_csv(file_path: Path) -> dict:
         # INSERT OR IGNORE automatically handles deduplication on the parcel_number UNIQUE constraint
         insert_query = """
             INSERT OR IGNORE INTO prospects (
-                owner_name, address, parcel_number, equity_score, 
+                owner_name, address, parcel_number, equity_score, hold_years,
                 pipeline_stage, source, created_at, raw_data
-            ) VALUES (?, ?, ?, ?, 'IDENTIFIED', 'csv_import', ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, 'IDENTIFIED', 'csv_import', ?, ?)
         """
         
         import json
         for r in records:
-            if not r['parcel_number'] or pd.isna(r['parcel_number']):
+            p_num = str(r.get('parcel_number', '')).strip()
+            if not p_num or p_num == 'nan':
                 stats["errors"] += 1
                 continue
                 
             # Basic equity categorization logic
             raw_equity = r.get('equity_score', 'UNKNOWN')
             equity_cat = 'UNKNOWN'
-            if isinstance(raw_equity, str):
+            
+            # Hold years can trigger HIGH equity even if % is unknown (Pinneo Logic)
+            hold = r.get('hold_years')
+            if hold and hold >= 10:
+                equity_cat = 'HIGH'
+            elif isinstance(raw_equity, str) and raw_equity != 'UNKNOWN':
                 if '%' in raw_equity or raw_equity.replace('.','',1).isdigit():
                     try:
                         val = float(raw_equity.replace('%', ''))
@@ -93,10 +136,11 @@ def process_prospect_csv(file_path: Path) -> dict:
             raw_json = json.dumps(clean_row)
                         
             cursor.execute(insert_query, (
-                str(r['owner_name']), 
-                str(r['address']), 
-                str(r['parcel_number']), 
-                equity_cat, 
+                str(r.get('owner_name', '')), 
+                str(r.get('address', '')), 
+                p_num, 
+                equity_cat,
+                hold,
                 now,
                 raw_json
             ))

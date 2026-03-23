@@ -106,7 +106,8 @@ CREATE TABLE IF NOT EXISTS prospects (
     archetype      TEXT,
     last_contact   TEXT,
     notes          TEXT,
-    created_at     TEXT    NOT NULL
+    created_at     TEXT    NOT NULL,
+    raw_data       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS letters (

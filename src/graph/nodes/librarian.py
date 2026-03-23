@@ -4,6 +4,7 @@ import datetime
 from pathlib import Path
 from typing import Tuple, Optional
 from pydantic import BaseModel, Field
+from google import genai
 from src.graph.state import DealState
 from src.utils.logger import get_logger
 from src.database.db import get_connection
@@ -33,11 +34,72 @@ class Librarian:
         row = self.conn.execute("SELECT 1 FROM files WHERE content_hash = ? LIMIT 1", (file_hash,)).fetchone()
         return row is not None
         
+    def _transcribe_audio(self, file_path: Path) -> str:
+        """
+        Hybrid Transcription (ADR-005 Audited Fallback):
+        1. Groq Whisper v3 Turbo for lightning STT (The "Ears").
+        2. NVIDIA Mistral-Nemo Minitron for synthesis (The "Refiner").
+        """
+        log.info("starting_hybrid_audio_transcription", file=file_path.name)
+        try:
+            import litellm
+            import subprocess
+            
+            # 1. Compress to 32k mono for speed (even for Groq)
+            cache_dir = config.INBOX_DIR / "processed"
+            cache_dir.mkdir(exist_ok=True)
+            cached_mp3 = cache_dir / f"{file_path.stem}_32k.mp3"
+            
+            if not cached_mp3.exists():
+                log.info("compressing_audio_for_groq", file=file_path.name)
+                subprocess.run([
+                    "ffmpeg", "-y", "-i", str(file_path),
+                    "-b:a", "32k", "-ac", "1", str(cached_mp3)
+                ], capture_output=True, check=True)
+
+            # 2. Lightning STT via Groq
+            log.info("calling_groq_whisper_v3")
+            with open(cached_mp3, "rb") as f:
+                stt_res = litellm.transcription(
+                    model="groq/whisper-large-v3-turbo",
+                    file=f
+                )
+            raw_text = stt_res.text
+            log.info("stt_complete", length=len(raw_text))
+
+            # 3. Refine & Summarize via NVIDIA (Audited 8B Class)
+            prompt = f"""
+            You are a Principal Broker analyzing a meeting transcript.
+            Provide a 3-sentence 'Doctrine Synthesis' and a clean Markdown transcript.
+            
+            Transcript:
+            {raw_text[:15000]} # Context limited for rapid refinement
+            """
+            
+            log.info("calling_nvidia_minitron_for_refinement")
+            response_str = llm.complete(
+                prompt=prompt,
+                agent="librarian"
+            )
+            
+            # 4. Save to Institutional Memory
+            out_name = f"TRANSCRIPT_{file_path.stem}.md"
+            out_path = config.KNOWLEDGE_DIR / "reference" / out_name
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(response_str)
+
+            log.info("transcription_complete", out_path=str(out_path))
+            return str(out_path)
+
+        except Exception as e:
+            log.error("transcription_failed", file=file_path.name, error=str(e))
+            return ""
+
     def _maintain_knowledge(self):
         """Scans the knowledge directory for new files and triggers the Embedder if needed."""
         from src.brain.embedder import BrainEmbedder
         log.info("starting_knowledge_maintenance")
-        
+
         # We rely on the BrainEmbedder's built-in idempotency (it checks hashes)
         # to only embed new or changed files.
         embedder = BrainEmbedder()
@@ -49,43 +111,52 @@ class Librarian:
         Returns: (ContentClass, DealID)
         """
         ext = file_path.suffix.lower()
-        
+
         # 1. Handle Audio separately (ADR-005)
         if ext in ['.m4a', '.mp3', '.wav', '.mp4']:
             log.info("audio_file_detected_for_transcription", file=file_path.name)
-            # Transcription logic goes here. For now, we return default classification.
+            self._transcribe_audio(file_path)
             return ("SELLER_CORRESPONDENCE", None)
-            
+
         # 2. Handle Documents & Images via LLM
         try:
             # Re-use the CFO hybrid parser to get a string or Gemini File object
             document_content = _parse_document(file_path)
-            
+
             prompt = f"Analyze the following document and classify it into one of our taxonomy classes. Also, extract the Deal ID if it is explicitly mentioned (otherwise return null).\n\nDocument:\n{document_content}"
-            
-            import json
-            import re
-            
+
             response_str = llm.complete(
                 prompt=prompt,
                 tier="fast",
                 agent="librarian",
                 response_format=LibrarianClassification
             )
-            
-            # Flexible JSON Parsing: NVIDIA models often hallucinate key names
+
+            if not response_str:
+                return ("OTHER", None)
+
+            import json
+            import re
+
+            # Robust JSON Extraction
+            json_match = re.search(r"(\{.*\})", response_str, re.DOTALL)
+            if json_match:
+                response_str = json_match.group(1)
+
+            # Additional cleanup
+            response_str = response_str.replace("```json", "").replace("```", "").strip()
+
             data = json.loads(response_str)
-            
+
             # Map various possible keys to our internal fields
             content_class = data.get("content_class") or data.get("taxonomy_class") or data.get("taxonomy") or data.get("class") or "OTHER"
             deal_id = data.get("deal_id") or data.get("dealid")
-            
+
             return (str(content_class).upper(), deal_id)
-            
+
         except Exception as e:
             log.error("librarian_classification_failed", file=file_path.name, error=str(e))
             return ("OTHER", None)
-
     def _sweep_inbox(self) -> list[dict]:
         """Sweeps staging/inbox/ for new files."""
         processed_files = []
