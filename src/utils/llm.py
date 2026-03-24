@@ -26,11 +26,16 @@ def _check_budget():
 
 def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = None, deal_id: str | None = None, response_format: Any = None) -> str:
     """
-    Unified completion interface. Routes directly to the NVIDIA model 
-    specified for the given agent in config.py.
+    Unified completion interface.
+    
+    BUDGET FIREWALL: Throttles background tasks but allows Principal Override
+    for human-triggered agentic decisions.
     """
-    if not _check_budget():
-        return "ERROR: Daily token budget exceeded. Please check System Health."
+    # Override for human-triggered agents (The 'Principal' Tier)
+    is_principal_task = agent in ["manager", "scribe"]
+    
+    if not is_principal_task and not _check_budget():
+        return json.dumps({"error": "DAILY_TOKEN_BUDGET_EXCEEDED", "message": "Background task throttled. Please check System Health."})
 
     model = config.AGENT_MODELS.get(agent)
     if not model:
