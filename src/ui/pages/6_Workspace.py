@@ -92,12 +92,12 @@ if st.session_state.current_deal_id:
             try:
                 conn = sqlite3.connect(str(config.DB_PATH))
                 conn.row_factory = sqlite3.Row
-                verdict = conn.execute(\"\"\"
+                verdict = conn.execute("""
                     SELECT verdict, confidence, reasoning_text, scribe_instructions 
                     FROM verdicts 
                     WHERE deal_id = ? 
                     ORDER BY issued_at DESC LIMIT 1
-                \"\"\", (deal_id,)).fetchone()
+                """, (deal_id,)).fetchone()
                 conn.close()
                 
                 if verdict:

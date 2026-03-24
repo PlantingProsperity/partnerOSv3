@@ -30,12 +30,12 @@ def render_agent_bar():
         statuses = []
         
         for agent in agents:
-            row = conn.execute(\"\"\"
+            row = conn.execute("""
                 SELECT model, success, ts 
                 FROM llm_calls 
                 WHERE agent = ? 
                 ORDER BY ts DESC LIMIT 1
-            \"\"\", (agent,)).fetchone()
+            """, (agent,)).fetchone()
             
             label = agent.split('_')[-1].capitalize()
             if row:

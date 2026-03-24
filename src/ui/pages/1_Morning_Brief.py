@@ -17,12 +17,12 @@ try:
     conn = sqlite3.connect(str(config.DB_PATH))
     conn.row_factory = sqlite3.Row
     # Fetch top 3 HIGH equity prospects
-    prospects = conn.execute(\"\"\"
+    prospects = conn.execute("""
         SELECT owner_name, address, parcel_number, hold_years 
         FROM prospects 
         WHERE equity_score = 'HIGH' 
         ORDER BY created_at DESC LIMIT 3
-    \"\"\").fetchall()
+    """).fetchall()
     conn.close()
 
     if prospects:
@@ -46,12 +46,12 @@ try:
     thought_prompt = "Provide one sentence of high-level strategic wisdom for a commercial real estate principal based on the Greg Pinneo 'Transaction Engineering' doctrine. Be pithy and authoritative."
     thought = llm.complete(thought_prompt, agent="manager")
     
-    st.markdown(f\"\"\"
+    st.markdown(f"""
     <div class="bento-card" style="border-left: 4px solid var(--mac-accent);">
         <p style="font-style: italic; font-size: 18px; line-height: 1.6;">"{thought}"</p>
         <span class="mac-subtext">— The Third Partner</span>
     </div>
-    \"\"\", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 except Exception as e:
     st.info("Manager is contemplating today's strategy...")
 
