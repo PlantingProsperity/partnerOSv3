@@ -143,14 +143,19 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
         try:
             import asyncio
             from src.integrations.scout_scraper import scrape_pic_details
+            from src.integrations.auditor_scraper import mine_recorded_docs
             from src.utils.parser import extract_json
             
-            # Execute the async scraper within the synchronous node
+            # 1. Scrape PIC (Photos/Status)
             raw_pic_data = asyncio.run(scrape_pic_details(prop_id))
             pic_data = extract_json(json.dumps(raw_pic_data))
             
+            # 2. Mine Auditor (Deed/Mortgage History)
+            auditor_data = asyncio.run(mine_recorded_docs(prop_id))
+            
             # Merge forensic data into property_data
             property_data["forensics"] = pic_data
+            property_data["auditor_history"] = auditor_data.get("document_history", [])
             
             # Update the record with full scrape status
             conn = get_connection()
