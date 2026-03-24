@@ -71,6 +71,21 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
             property_data["pt1_desc"] = gis_data.get('pt1_desc')
             property_data["mkt_tot_val"] = gis_data.get('mkt_tot_val')
             property_data["permit_count_5yr"] = permit_count
+            property_data["raw_gis_json"] = json.dumps(gis_data.get('raw_attributes'))
+            
+            # --- Phase 7: Strategic Signal Extraction (Panoramic Optimization) ---
+            # Instead of raw JSON, we extract the top signals for the Manager
+            raw = gis_data.get('raw_attributes', {})
+            property_data["panoramic_signals"] = {
+                "units": raw.get("Units"),
+                "building_condition": raw.get("BldgCond"),
+                "neighborhood_market": raw.get("Nbrhd"),
+                "persons_per_household": raw.get("pph"),
+                "jurisdiction": raw.get("JurisDesc"),
+                "use_class": raw.get("PropertyUseClass"),
+                "legal_description": raw.get("LegalShort"),
+                "tax_amount": raw.get("TaxAmount")
+            }
             
             # 3. Compute Equity Score
             if hold_years is None or hold_years >= 10:

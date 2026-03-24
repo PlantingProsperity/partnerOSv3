@@ -39,44 +39,39 @@ def manager_node(state: DealState) -> dict:
     heuristic_failures = state.get("heuristic_failures", [])
     heuristic_flagged = state.get("heuristic_flagged", False)
     
+    # 1. Build context-rich prompt
+    # Panoramic Intelligence: Using the high-signal extraction from the Scout
+    signals = property_data.get('panoramic_signals', {})
+    
     prompt = f"""
-    You are the Managing Partner of a commercial real estate firm, operating on the Greg Pinneo doctrine.
-    Review the following deal data and issue a final verdict (APPROVE or KILL).
+    You are the Managing Partner of Fasahov Bros. Brokerage and an Aggressive Opportunity Hunter.
+    Issue a strategic verdict for: {state.get("address")}
     
-    DEAL ID: {deal_id}
-    ADDRESS: {state.get("address")}
+    SYSTEM MANTRA: We don't buy properties; we rescue them.
     
-    SELLER PSYCHOLOGY:
-    Archetype: {archetype}
+    --- STRATEGIC GIS SIGNALS ---
+    - Units: {signals.get('units')}
+    - Building Condition: {signals.get('building_condition')}
+    - Neighborhood Market: {signals.get('neighborhood_market')}
+    - Demographic Load (PPH): {signals.get('persons_per_household')}
+    - Jurisdiction: {signals.get('jurisdiction')}
+    - Tax Load: ${signals.get('tax_amount')}
     
-    FINANCIALS (Calculated):
-    DSCR: {financials.get("dscr")}
-    Cap Rate: {financials.get("cap_rate")}
+    --- DEAL FINANCIALS ---
+    - DSCR: {financials.get("dscr")}
+    - Cap Rate: {financials.get("cap_rate")}
+    - Seller Archetype: {archetype}
     
-    PROPERTY DATA:
-    Zoning: {property_data.get("zoning")}
-    Hold Years: {property_data.get("hold_years")}
-    Tax Status: {property_data.get("tax_status")}
+    --- DIRECTIVE ---
+    Match patterns in the signals. If DSCR < 1.25, you MUST attempt to 'Rescue' the deal using 
+    Greg Pinneo's 'Transaction Engineering' (creative carry, interest-only).
     
-    SYSTEM DIRECTIVE: Perform 'Panoramic Data Forensics'. 
-    Analyze the raw GIS metadata below. Match patterns between building condition, 
-    census tract population trends (PopulationOFM/pph), and specific tax codes 
-    to extrapolate hidden seller motivation.
+    If a rescue is possible, the verdict MUST be 'APPROVE'. 
+    Only 'KILL' if the environmental constraints or market vacancy make it un-rescuable.
     
-    RAW GIS METADATA:
-    {json.dumps(property_data.get('raw_gis_json'), indent=2)}
-    
-    HEURISTIC GATES:
-    Flagged: {heuristic_flagged}
-    Failures: {json.dumps(heuristic_failures)}
+    Output strictly in JSON format.
     """
     
-    if heuristic_flagged:
-        prompt += """
-        IMPORTANT: The deal failed standard mathematical heuristics. As a Pinneo disciple, do NOT automatically KILL the deal. 
-        Invent creative seller-financing conditions (e.g., lower interest, interest-only periods, balloon payments) that would successfully flip this deal into a safe, cash-flowing asset. Include these specific structural terms in the scribe_instructions.
-        """
-        
     try:
         import re
         # 2. Call LLM
