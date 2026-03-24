@@ -8,13 +8,30 @@ from src.database.db import get_connection
 
 log = get_logger("llm_gateway")
 
+def _check_budget():
+    """Checks daily token usage against config limits."""
+    try:
+        conn = get_connection()
+        today = datetime.date.today().isoformat()
+        row = conn.execute("SELECT SUM(tokens_in + tokens_out) FROM gemini_token_usage WHERE date = ?", (today,)).fetchone()
+        usage = row[0] or 0
+        conn.close()
+        
+        if usage > config.DAILY_TOKEN_BUDGET:
+            log.error("DAILY_TOKEN_BUDGET_EXCEEDED", usage=usage, limit=config.DAILY_TOKEN_BUDGET)
+            return False
+        return True
+    except:
+        return True
+
 def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = None, deal_id: str | None = None, response_format: Any = None) -> str:
     """
     Unified completion interface. Routes directly to the NVIDIA model 
     specified for the given agent in config.py.
-    
-    Adheres to the PartnerOS Deployment Matrix (Temperature=0 for forensic tasks).
     """
+    if not _check_budget():
+        return "ERROR: Daily token budget exceeded. Please check System Health."
+
     model = config.AGENT_MODELS.get(agent)
     if not model:
         log.warning("agent_model_not_found", agent=agent, fallback="nvidia_nim/meta/llama-3.3-70b-instruct")

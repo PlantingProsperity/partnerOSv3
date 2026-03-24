@@ -75,6 +75,6 @@ BACKUP_CHECK_SCHEDULE: str = "0 4 1 * *"  # cron: monthly 1st at 4 AM
 RESTIC_REPO:           str = str(DATA_DIR / "backups")
 RCLONE_SYNC_TIMEOUT:   int = 300           # ms — ADR-H02
 
-# ── Gemini Budget (v3.2) ──────────────────────────────────────────────────────
-GEMINI_DAILY_TOKEN_BUDGET:   int = 1_000_000
-GEMINI_AUDIO_TOKEN_WARNING:  int = 800_000
+# ── AI Budget (v3.2) ──────────────────────────────────────────────────────
+DAILY_TOKEN_BUDGET:   int = 1_000_000
+AUDIO_TOKEN_WARNING:  int = 800_000
