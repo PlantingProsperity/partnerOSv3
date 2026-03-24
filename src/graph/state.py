@@ -7,6 +7,10 @@ def merge_dicts(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
     res.update(b)
     return res
 
+def merge_lists(a: list, b: list) -> list:
+    """Combines two lists."""
+    return a + b
+
 class DealState(TypedDict):
     """
     The permanent state object that flows through the LangGraph pipeline.
@@ -38,3 +42,6 @@ class DealState(TypedDict):
     scribe_instructions: str
     loi_draft: str
     speculative_drafts: Annotated[dict, merge_dicts]
+    market_signals: Annotated[dict, merge_dicts]
+    proposed_structures: Annotated[list, merge_lists]
+    risk_monte_carlo: Annotated[dict, merge_dicts]

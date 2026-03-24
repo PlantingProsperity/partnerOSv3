@@ -1,14 +1,14 @@
 """
-arcgis_rest_client.py — The 'Secret Entrance' Engine for PartnerOS
+arcgis_rest_client.py — The 'Secret Entrance' Engine for PartnerOS (Elevated)
 
-Provides sub-second, on-demand property enrichment via public ArcGIS REST APIs.
-Bypasses bulk ZIP files for daily scouting tasks.
+Provides high-performance, async property enrichment via public ArcGIS REST APIs.
+Bypasses bulk downloads for real-time scouting and signal detection.
 """
 
-import requests
+import httpx
 import json
-import time
-from typing import Dict, Optional, Any
+import asyncio
+from typing import Dict, Optional, List
 from src.utils.logger import get_logger
 import config
 
@@ -16,14 +16,15 @@ log = get_logger("ingestion.arcgis_rest")
 
 class ArcGISClient:
     """
-    Lightweight client for querying Clark County FeatureServers.
+    High-performance async client for Clark County FeatureServers.
     """
     def __init__(self):
         self.base_url = config.ARCGIS_REST_ROOT
         self.layers = config.ARCGIS_LAYERS
+        self.semaphore = asyncio.Semaphore(5) # Limit concurrency to be respectful
 
-    def _make_query(self, layer_url: str, where: str, out_fields: str = "*") -> Optional[Dict]:
-        """Internal helper for REST queries."""
+    async def _make_query(self, layer_url: str, where: str, out_fields: str = "*") -> Optional[Dict]:
+        """Internal helper for async REST queries."""
         url = f"{layer_url}/query"
         params = {
             "where": where,
@@ -31,36 +32,44 @@ class ArcGISClient:
             "f": "json",
             "returnGeometry": "false"
         }
-        try:
-            r = requests.get(url, params=params, timeout=10)
-            r.raise_for_status()
-            data = r.json()
-            if data.get("features"):
-                return data["features"][0].get("attributes")
-            return None
-        except Exception as e:
-            log.error("arcgis_query_failed", url=url, error=str(e))
-            return None
+        
+        async with self.semaphore:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                try:
+                    r = await client.get(url, params=params)
+                    r.raise_for_status()
+                    data = r.json()
+                    if data.get("features"):
+                        return data["features"][0].get("attributes")
+                    return None
+                except Exception as e:
+                    log.error("arcgis_rest_query_failed", url=url, error=str(e))
+                    return None
 
-    def get_parcel_details(self, parcel_number: str) -> Optional[Dict]:
+    async def get_parcel_details(self, parcel_number: str) -> Optional[Dict]:
         """
         Sub-second enrichment for a specific parcel.
-        Used by the Scout agent.
+        Used by the Scout and Explorer agents.
         """
-        log.info("querying_live_parcel_data", parcel=parcel_number)
-        # Primary lookup in TaxlotsPublic
-        where = f"Prop_id = '{parcel_number}'" # Or PARCEL_NUM depending on layer
-        return self._make_query(self.layers["taxlots"], where)
+        log.info("querying_live_arcgis_parcel", parcel=parcel_number)
+        # Search by Prop_id or ParcelNum
+        where = f"Prop_id = '{parcel_number}' OR SitusAddrsFull LIKE '{parcel_number}%'"
+        return await self._make_query(self.layers["taxlots"], where)
 
-    def get_zoning_details(self, lat: float, lon: float) -> Optional[Dict]:
-        """
-        Spatial query for zoning at a specific coordinate.
-        """
-        # Note: Requires point-in-polygon spatial query
-        # Simplified for now to attribute lookup if we have parcel mapping
-        pass
+    async def query_custom_layer(self, layer_key: str, where: str) -> Optional[Dict]:
+        """Queries any layer defined in config.ARCGIS_LAYERS."""
+        layer_url = self.layers.get(layer_key)
+        if not layer_url:
+            log.error("layer_key_not_found", key=layer_key)
+            return None
+        return await self._make_query(layer_url, where)
 
-def query_arcgis(parcel_number: str) -> Optional[Dict]:
-    """Standalone helper for agent nodes."""
+async def query_arcgis(parcel_number: str) -> Optional[Dict]:
+    """Helper for standalone usage."""
     client = ArcGISClient()
-    return client.get_parcel_details(parcel_number)
+    return await client.get_parcel_details(parcel_number)
+
+if __name__ == "__main__":
+    # Test for 716 E McLoughlin (41550000)
+    res = asyncio.run(query_arcgis("41550000"))
+    print(json.dumps(res, indent=2))
