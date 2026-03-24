@@ -94,6 +94,16 @@ class Librarian:
                 f.write(response_str)
 
             # 5. Register in DB to prevent re-transcription
+            # Phase 1 (v4.0): Log Episodic Memory
+            from src.brain.memory import MemoryManager
+            mem = MemoryManager()
+            mem.add_episode(
+                deal_id="UNRESOLVED", # Librarian doesn't always have deal_id yet
+                seller_id=file_path.stem, 
+                trace_type="MEETING", 
+                summary=f"Transcribed audio: {file_path.name}. Content refined by NVIDIA."
+            )
+
             file_hash = get_file_hash(file_path)
             self.conn.execute("""
                 INSERT INTO files (deal_id, original_name, file_path, file_type, content_class, content_hash, discovered_at, status)

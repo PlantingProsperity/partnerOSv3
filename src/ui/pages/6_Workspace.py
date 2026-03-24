@@ -155,6 +155,26 @@ if st.session_state.current_deal_id:
                         
                         if failures:
                             st.caption(f"**Triggered Failures:** {', '.join(failures)}")
+                    # --- GENERATIVE UI (Phase 3 Optimization) ---
+                    st.markdown("---")
+                    st.markdown("### 🏗️ Strategic Engineering")
+                    from src.ui.registry import UI_COMPONENTS
+                    
+                    # The Manager now outputs 'ui_modules' in its JSON (H-MEM logic)
+                    # For now, we infer from verdict reasoning or type
+                    reasoning_text = verdict.get("reasoning_text", "").upper()
+                    
+                    # Check for keywords to trigger dynamic UI
+                    triggered = False
+                    if "WRAP" in reasoning_text or "SUBJECT-TO" in reasoning_text:
+                        UI_COMPONENTS["WRAP"](dict(verdict))
+                        triggered = True
+                    if "REDEVELOPMENT" in reasoning_text or "DENSITY" in reasoning_text:
+                        UI_COMPONENTS["REDEVELOPMENT"](dict(verdict))
+                        triggered = True
+                    
+                    if not triggered:
+                        st.caption("No specialized engineering tools required for this archetype.")
                 else:
                     st.warning("No forensic synthesis available for this deal yet.")
             except Exception as e:

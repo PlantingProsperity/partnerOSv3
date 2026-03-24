@@ -40,7 +40,15 @@ def manager_node(state: DealState) -> dict:
     heuristic_flagged = state.get("heuristic_flagged", False)
     
     # 1. Build context-rich prompt
-    # Panoramic Intelligence: Using the high-signal extraction from the Scout
+    # Phase 6: Panoramic Intelligence - Feeding the high-signal extraction from the Scout
+    # Phase 1 (v4.0): Cognitive Memory - Feeding stateful relationship history
+    from src.brain.memory import MemoryManager
+    mem = MemoryManager()
+    
+    # We use owner_name or parcel_number as seller_id
+    seller_id = state.get("property_data", {}).get("owner_name", "UNKNOWN")
+    cognition = mem.get_seller_context(seller_id)
+    
     signals = property_data.get('panoramic_signals', {})
     
     prompt = f"""
@@ -49,6 +57,10 @@ def manager_node(state: DealState) -> dict:
     Issue a strategic verdict for: {state.get("address")}
     
     SYSTEM MANTRA: Unless it proves to be an A+ all around, a deal dies and we move on to the next hunt.
+    
+    --- COGNITIVE MEMORY (RELATIONSHIP HISTORY) ---
+    Distilled Facts: {json.dumps(cognition['facts'])}
+    Recent Episodes: {json.dumps(cognition['history'])}
     
     --- STRATEGIC GIS SIGNALS ---
     - Units: {signals.get('units')}

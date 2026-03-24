@@ -59,8 +59,11 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
             )
             messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
+        elif isinstance(prompt, list):
+            # Multimodal support (ADR-S13): prompt is already a formatted list of content blocks
+            messages.append({"role": "user", "content": prompt})
         else:
-            # For multimodal (Llama 4 Maverick), the prompt is already a list of message dicts
+            # Fallback for multimodal (Llama 4 Maverick), the prompt is already a list of message dicts
             messages = [{"role": "user", "content": prompt}]
         
         kwargs = {
