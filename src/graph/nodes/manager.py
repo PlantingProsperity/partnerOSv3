@@ -100,8 +100,13 @@ def manager_node(state: DealState) -> dict:
         # Additional cleanup
         response_str = response_str.replace("```json", "").replace("```", "").strip()
 
-        # Flexible JSON Parsing: NVIDIA models often hallucinate key names or nesting
-        data = json.loads(response_str)
+        # Flexible JSON Parsing: Using the new robust extraction utility
+        from src.utils.parser import extract_json
+        data = extract_json(response_str)
+        
+        if not data:
+            log.error("manager_json_extraction_failed", deal_id=deal_id, snippet=response_str[:100])
+            return {"verdict": "ERROR", "status": "UNDER_REVIEW"}
 
         verdict = data.get("verdict") or data.get("decision") or "KILL"
         confidence = data.get("confidence") or data.get("confidence_level") or 0

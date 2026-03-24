@@ -2,9 +2,36 @@ import sqlite3
 import sqlite_vec
 import shutil
 import datetime
+import time
+import functools
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable, Any
 import config
+from src.utils.logger import get_logger
+
+log = get_logger("database.db")
+
+def with_db_retry(max_retries: int = 5, delay: float = 0.1):
+    """
+    Decorator to retry database operations if the database is locked.
+    """
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except sqlite3.OperationalError as e:
+                    if "locked" in str(e).lower():
+                        retries += 1
+                        time.sleep(delay * (2 ** retries)) # Exponential backoff
+                        log.warning("db_lock_retry", attempt=retries, func=func.__name__)
+                        continue
+                    raise e
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def get_connection(db_path: Path = config.DB_PATH) -> sqlite3.Connection:
     """

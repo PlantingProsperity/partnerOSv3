@@ -141,5 +141,9 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
     if use_playwright:
         log.info("scout_triggering_playwright_deep_dive", deal_id=deal_id)
         # TODO: Implement scout_scraper integration
+        # from src.integrations.scout_scraper import scrape_pic_details
+        # from src.utils.parser import extract_json
+        # raw_pic = await scrape_pic_details(prop_id)
+        # data = extract_json(raw_pic)
         
     return {"property_data": property_data}
