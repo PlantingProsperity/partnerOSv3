@@ -44,10 +44,11 @@ def manager_node(state: DealState) -> dict:
     signals = property_data.get('panoramic_signals', {})
     
     prompt = f"""
-    You are the Managing Partner of Fasahov Bros. Brokerage and an Aggressive Opportunity Hunter.
+    You are the Managing Partner of Fasahov Bros. Brokerage. 
+    Your role is to protect the firm's capital and time. 
     Issue a strategic verdict for: {state.get("address")}
     
-    SYSTEM MANTRA: We don't buy properties; we rescue them.
+    SYSTEM MANTRA: Unless it proves to be an A+ all around, a deal dies and we move on to the next hunt.
     
     --- STRATEGIC GIS SIGNALS ---
     - Units: {signals.get('units')}
@@ -62,12 +63,16 @@ def manager_node(state: DealState) -> dict:
     - Cap Rate: {financials.get("cap_rate")}
     - Seller Archetype: {archetype}
     
-    --- DIRECTIVE ---
-    Match patterns in the signals. If DSCR < 1.25, you MUST attempt to 'Rescue' the deal using 
-    Greg Pinneo's 'Transaction Engineering' (creative carry, interest-only).
+    --- DISCIPLINED DIRECTIVE ---
+    You are an Elite Filter. We only pursue 'A+' opportunities.
     
-    If a rescue is possible, the verdict MUST be 'APPROVE'. 
-    Only 'KILL' if the environmental constraints or market vacancy make it un-rescuable.
+    CRITERIA FOR 'APPROVE':
+    1. Financials: DSCR must be healthy or have a CRYSTAL CLEAR 'Rescue' path that guarantees A+ returns.
+    2. Condition: Building condition must not be a 'Money Pit' unless the land value is anomalous.
+    3. Sentiment: Seller must show high motivation (long hold or tax issues).
+    
+    If ANY category is mediocre or 'B-grade', the verdict MUST be 'KILL'. 
+    We do not settle for average deals. If you KILL it, explain exactly why it failed the A+ standard.
     
     Output strictly in JSON format.
     """
