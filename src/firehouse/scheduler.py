@@ -11,8 +11,21 @@ log = get_logger("firehouse.scheduler")
 def generate_morning_brief():
     """
     Generates the daily Morning Brief summarizing pipeline stats and AI Prospect picks.
+    1. Sweeps inbox for new data (ADR-S3-03).
+    2. Runs sourcing analysis.
+    3. Compiles markdown.
     """
-    log.info("generating_morning_brief")
+    log.info("starting_firehouse_intake_sweep")
+    from src.graph.nodes.librarian import Librarian
+    try:
+        lib = Librarian()
+        # This will process files, transcribe audio via Groq, and sync Brain vectors
+        lib._maintain_knowledge()
+        lib._sweep_inbox()
+    except Exception as e:
+        log.error("morning_intake_failed", error=str(e))
+
+    log.info("generating_morning_brief_report")
     now = datetime.datetime.now(datetime.UTC)
     
     # 1. Pipeline Stats
@@ -71,8 +84,12 @@ def start_firehouse():
     Initializes and starts the APScheduler.
     """
     if not scheduler.running:
-        # Schedule the Morning Brief for 7:00 AM every day
+        # 1. Schedule the Morning Brief for 7:00 AM every day
         scheduler.add_job(generate_morning_brief, 'cron', hour=7, minute=0, id='morning_brief_job')
+        
+        # 2. Add Heartbeat (30-minute interval) for active background work
+        scheduler.add_job(generate_morning_brief, 'interval', minutes=30, id='heartbeat_job')
+        
         scheduler.start()
         log.info("firehouse_scheduler_started")
         

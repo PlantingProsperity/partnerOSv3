@@ -34,12 +34,14 @@ def test_manager_node_approve(mock_complete):
     
     # 3. Insert dummy deal to satisfy foreign key constraint
     conn = get_connection()
-    conn.execute("""
-        INSERT OR IGNORE INTO deals (deal_id, address, address_slug, jacket_path, thread_id, created_at, updated_at)
-        VALUES (?, '123 Manager St', '123-manager-st', '/dummy', 'thread_manager_123', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    """, (deal_id,))
-    conn.commit()
-    conn.close()
+    try:
+        conn.execute("""
+            INSERT OR REPLACE INTO deals (deal_id, address, address_slug, jacket_path, thread_id, created_at, updated_at)
+            VALUES (?, '123 Manager St', '123-manager-st', '/dummy', 'thread_manager_123', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """, (deal_id,))
+        conn.commit()
+    finally:
+        conn.close()
     
     # 4. Execute node
     result = manager_node(state)

@@ -43,17 +43,45 @@ if st.session_state.current_deal_id:
     # --- PANE 2: THE MENTOR (Chat) ---
     with col_mentor:
         st.subheader("🧠 The Manager")
-        st.markdown("<div style='height: 400px; overflow-y: auto; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
-        # Fetch conversation history for this deal
-        # For now, we show a clean interface for interaction
-        st.info("Manager is ready. Ask about the 15-year hold or seller financing structures.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # 1. Persistent Chat History for this Deal
+        if f"chat_history_{deal_id}" not in st.session_state:
+            st.session_state[f"chat_history_{deal_id}"] = []
+            
+        chat_container = st.container(height=500)
+        
+        with chat_container:
+            for msg in st.session_state[f"chat_history_{deal_id}"]:
+                with st.chat_message(msg["role"]):
+                    st.write(msg["content"])
         
         user_input = st.chat_input("Command the Manager...")
         if user_input:
-            with st.status("Manager is thinking...", expanded=True):
-                response = llm.complete(user_input, agent="manager", deal_id=deal_id)
-                st.write(response)
+            # Display user message
+            with chat_container:
+                with st.chat_message("user"):
+                    st.write(user_input)
+            st.session_state[f"chat_history_{deal_id}"].append({"role": "user", "content": user_input})
+            
+            # Call Manager with Thinking Trace
+            with st.status("The Principal is contemplating...", expanded=True):
+                response_str = llm.complete(user_input, agent="manager", deal_id=deal_id)
+                
+                import re
+                # Extract <think> content if present (DeepSeek-R1 style)
+                think_match = re.search(r"<think>(.*?)</think>", response_str, re.DOTALL)
+                final_advice = response_str
+                
+                if think_match:
+                    think_content = think_match.group(1).strip()
+                    final_advice = response_str.replace(think_match.group(0), "").strip()
+                    with st.expander("🔍 Internal Thinking Process", expanded=False):
+                        st.markdown(f"<p class='mac-subtext'>{think_content}</p>", unsafe_allow_html=True)
+                
+                st.write(final_advice)
+                
+            st.session_state[f"chat_history_{deal_id}"].append({"role": "assistant", "content": final_advice})
+            st.rerun()
 
     # --- PANE 3: THE STAGE (Forensics & Vault) ---
     with col_stage:
