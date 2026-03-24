@@ -72,21 +72,13 @@ def manager_node(state: DealState) -> dict:
     try:
         import re
         # 2. Call LLM
-        response_result = llm.complete(
+        response_str = llm.complete(
             prompt=prompt,
             tier="quality",
             agent="manager",
             deal_id=deal_id,
-            response_format=ManagerVerdict,
-            return_logprobs=True
+            response_format=ManagerVerdict
         )
-
-        # Handle dict response (content + logprobs) or string fallback
-        response_str = response_result
-        logic_tree_json = None
-        if isinstance(response_result, dict):
-            response_str = response_result.get("content", "")
-            logic_tree_json = json.dumps(response_result.get("logprobs", {}))
 
         if not response_str:
             log.error("manager_received_empty_response", deal_id=deal_id)
@@ -129,11 +121,12 @@ def manager_node(state: DealState) -> dict:
             str(verdict).upper(), 
             int(confidence), 
             str(reasoning),
-            logic_tree_json,
+            None, # logic_tree logic replaced by UI-level heuristics
             str(instructions)
         ))
         conn.commit()
-        conn.close()        
+        conn.close()
+        
         result = {
             "verdict": str(verdict).upper(),
             "manager_confidence": int(confidence),

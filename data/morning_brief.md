@@ -1,7 +1,7 @@
 # 🌅 Morning Brief — Tuesday, March 24, 2026
 
 ### 📊 System Health
-- **Active Deals in Pipeline:** 7
+- **Active Deals in Pipeline:** 8
 - **Total Prospects:** 1493
 - **Yesterday's Gemini Token Budget Used:** 100.5%
 

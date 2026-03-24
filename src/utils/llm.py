@@ -72,11 +72,6 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
         if agent in ["cfo_p1", "manager"]:
             kwargs["temperature"] = 0.0
             kwargs["top_p"] = 0.01 
-            
-        # Optional: Request logprobs for X-Ray UI
-        if return_logprobs and "deepseek" in model.lower():
-            kwargs["logprobs"] = True
-            kwargs["top_logprobs"] = 5
         
         # 3. Selective Response Format (JSON Grammar)
         # DeepSeek and some Qwen models on NIM reject strict response_format grammar
@@ -99,9 +94,6 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
             deal_id=deal_id,
             success=1
         )
-        
-        if return_logprobs and hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs:
-            return {"content": content, "logprobs": response.choices[0].logprobs.model_dump()}
             
         return content
         

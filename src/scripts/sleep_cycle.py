@@ -55,11 +55,11 @@ def distill_context():
         {combined_text}
         """
         
-        log.info("calling_llama_4_scout_for_distillation")
+        log.info("calling_nemotron_super_for_distillation")
         distilled_knowledge = llm.complete(
             prompt=prompt,
             tier="quality",
-            agent="prospect_sourcer" # Re-using Scout model mapped here
+            agent="scribe" # Re-using Nemotron Super 120B mapped here
         )
         
         # 3. Save as a 'Golden Rule' chunk
