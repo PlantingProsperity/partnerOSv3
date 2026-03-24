@@ -15,20 +15,25 @@ def bento_card(title: str, content: str, subtext: str = "", size: str = "medium"
     """
     st.markdown(html, unsafe_allow_html=True)
 
+@st.fragment(run_every="5s")
 def render_agent_bar():
     """
-    Renders the fixed Agent Status Bar at the bottom of the screen.
-    Fetches the latest status from llm_calls.
+    Renders the fixed Agent Status Bar. 
+    Refreshes every 5 seconds independently of the main app to show 'Life'.
     """
-    # 1. Fetch latest agent activity
     try:
         conn = sqlite3.connect(str(config.DB_PATH))
         conn.row_factory = sqlite3.Row
         
-        # Get the latest call for each major agent
         agents = ["prospect_sourcer", "librarian", "cfo_p1"]
         statuses = []
         
+        # Check for any NEW high-equity leads to trigger a Toast
+        new_lead = conn.execute("SELECT address FROM prospects WHERE equity_score = 'HIGH' AND created_at > datetime('now', '-5 minutes') LIMIT 1").fetchone()
+        if new_lead and "last_toast" not in st.session_state:
+            st.toast(f"🎯 New High-Equity Lead: {new_lead['address']}", icon="🔥")
+            st.session_state.last_toast = new_lead['address']
+
         for agent in agents:
             row = conn.execute("""
                 SELECT model, success, ts 
@@ -39,21 +44,21 @@ def render_agent_bar():
             
             label = agent.split('_')[-1].capitalize()
             if row:
-                # If the call was within the last 5 minutes, consider it 'Active'
-                status_text = f"{label}: Active ({row['model'].split('/')[-1]})"
+                # If call in last 60s, show as actively pulsing
+                status_text = f"{label}: Active"
                 statuses.append(f'<div class="agent-status"><div class="pulse"></div> {status_text}</div>')
             else:
-                statuses.append(f'<div class="agent-status" style="opacity:0.5">{label}: Idle</div>')
+                statuses.append(f'<div class="agent-status" style="opacity:0.4">{label}: Idle</div>')
         
         conn.close()
         
         html = f"""
         <div class="agent-bar">
+            <div style="font-weight:700; color:var(--mac-accent); margin-right:10px;">SYSTEM PULSE:</div>
             {''.join(statuses)}
         </div>
         """
         st.markdown(html, unsafe_allow_html=True)
         
-    except Exception as e:
-        # Fallback if DB is locked
-        st.markdown(f'<div class="agent-bar">Agents: Monitoring...</div>', unsafe_allow_html=True)
+    except:
+        st.markdown(f'<div class="agent-bar">Monitoring...</div>', unsafe_allow_html=True)

@@ -82,20 +82,24 @@ with col1:
     except:
         st.info("Database warming up...")
 
+@st.cache_data(ttl=900) # Cache for 15 minutes to save tokens and reduce friction
+def get_cached_strategy():
+    try:
+        thought_prompt = "Provide one sentence of high-level strategic wisdom for a commercial real estate principal based on the Greg Pinneo 'Transaction Engineering' doctrine. Be pithy."
+        return llm.complete(thought_prompt, agent="manager")
+    except:
+        return "The market is moving. Stay disciplined in your underwriting."
+
 with col2:
     # --- MANAGER'S COUNSEL ---
     st.markdown("#### The Principal's Counsel")
-    try:
-        thought_prompt = "Provide one sentence of high-level strategic wisdom for a commercial real estate principal based on the Greg Pinneo 'Transaction Engineering' doctrine. Be pithy."
-        thought = llm.complete(thought_prompt, agent="manager")
-        st.markdown(f\"\"\"
-        <div class="bento-card" style="border-left: 4px solid var(--mac-accent);">
-            <p style="font-style: italic; font-size: 15px; line-height: 1.6;">"{thought}"</p>
-            <span class="mac-subtext">— The Third Partner</span>
-        </div>
-        \"\"\", unsafe_allow_html=True)
-    except:
-        st.info("Manager is contemplating strategy...")
+    thought = get_cached_strategy()
+    st.markdown(f"""
+    <div class="bento-card" style="border-left: 4px solid var(--mac-accent);">
+        <p style="font-style: italic; font-size: 15px; line-height: 1.6;">"{thought}"</p>
+        <span class="mac-subtext">— The Third Partner</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # 5. RECENT INTELLIGENCE AUDIT
 st.markdown("#### Recent Intelligence Audit")
