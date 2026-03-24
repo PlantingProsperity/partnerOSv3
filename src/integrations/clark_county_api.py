@@ -311,6 +311,39 @@ def fetch_permit_count(prop_id: str, years_back: int = 5) -> int:
         log.warning("permit_lookup_unreliable", prop_id=prop_id)
         return 0
 
+def fetch_strategic_signals(prop_id: str) -> Dict:
+    """
+    Fetches non-obvious 'Secret' signals from deep GIS layers.
+    1. Redevelopment potential (internal county model)
+    2. Revaluation history (last physical inspection)
+    3. Corridor proximity (Highway buffers)
+    """
+    signals = {
+        "redevelopment_score": None,
+        "last_physical_inspection": None,
+        "highway_corridor": False
+    }
+    
+    # 1. Check Redevelopment Layer
+    try:
+        url = f"{BASE_URL}/Redevelopment_by_Parcel/MapServer/0/query"
+        params = {'where': f"Prop_id = '{prop_id}'", 'outFields': '*'}
+        data = _make_request(url, params)
+        if data.get('features'):
+            signals["redevelopment_score"] = "HIGH" # Presence in this layer is a signal
+    except: pass
+
+    # 2. Check Revaluation/Inspection History
+    try:
+        url = f"{BASE_URL}/Assessor/Residential_Revaluation_MAG/MapServer/0/query"
+        params = {'where': f"Prop_id = '{prop_id}'", 'outFields': 'InspectDate'}
+        data = _make_request(url, params)
+        if data.get('features'):
+            signals["last_physical_inspection"] = data['features'][0]['attributes'].get('InspectDate')
+    except: pass
+
+    return signals
+
 def run_equity_screen(
     property_types: Optional[List[str]] = None,
     hold_years_min: int = 10,

@@ -52,6 +52,10 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
             hold_years = clark_county_api.compute_hold_years(prop_id)
             permit_count = clark_county_api.fetch_permit_count(prop_id)
             
+            # --- Phase 5: Secret Strategic Signals ---
+            signals = clark_county_api.fetch_strategic_signals(prop_id)
+            property_data.update(signals)
+            
             property_data["tax_status"] = "DELINQUENT" if gis_data.get('tax_stat') else "CURRENT"
             property_data["hold_years"] = hold_years
             property_data["zoning"] = gis_data.get('zone1')
