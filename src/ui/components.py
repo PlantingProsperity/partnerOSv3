@@ -36,14 +36,23 @@ def render_agent_bar():
 
         for agent in agents:
             row = conn.execute("""
-                SELECT model, success, ts 
+                SELECT model, success, ts, error 
                 FROM llm_calls 
                 WHERE agent = ? 
                 ORDER BY ts DESC LIMIT 1
             """, (agent,)).fetchone()
             
             label = agent.split('_')[-1].capitalize()
-            if row:
+            # Check for reCAPTCHA block in Scout
+            if agent == "prospect_sourcer" and row and "CAPTCHA" in str(row.get('error', '')):
+                statuses.append(f'<div class="agent-status" style="color:#ff3b30"><div class="pulse" style="background:#ff3b30; box-shadow:0 0 8px #ff3b30"></div> Scout: BLOCKED</div>')
+                if st.button("🔓 Open Solver", key="solve_captcha"):
+                    import subprocess
+                    import os
+                    # Trigger the visible browser solver script
+                    subprocess.Popen(["python3", "src/scripts/clear_captcha.py"])
+                    st.info("Browser opening. Please clear reCAPTCHA and close window.")
+            elif row:
                 # If call in last 60s, show as actively pulsing
                 status_text = f"{label}: Active"
                 statuses.append(f'<div class="agent-status"><div class="pulse"></div> {status_text}</div>')
