@@ -140,10 +140,25 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
     # --- Tier 2: Playwright Deep Dive (Optional, Forensic) ---
     if use_playwright:
         log.info("scout_triggering_playwright_deep_dive", deal_id=deal_id)
-        # TODO: Implement scout_scraper integration
-        # from src.integrations.scout_scraper import scrape_pic_details
-        # from src.utils.parser import extract_json
-        # raw_pic = await scrape_pic_details(prop_id)
-        # data = extract_json(raw_pic)
+        try:
+            import asyncio
+            from src.integrations.scout_scraper import scrape_pic_details
+            from src.utils.parser import extract_json
+            
+            # Execute the async scraper within the synchronous node
+            raw_pic_data = asyncio.run(scrape_pic_details(prop_id))
+            pic_data = extract_json(json.dumps(raw_pic_data))
+            
+            # Merge forensic data into property_data
+            property_data["forensics"] = pic_data
+            
+            # Update the record with full scrape status
+            conn = get_connection()
+            conn.execute("UPDATE property_records SET scrape_status = 'COMPLETE' WHERE prop_id = ?", (prop_id,))
+            conn.commit()
+            conn.close()
+            log.info("scout_deep_dive_merged", deal_id=deal_id)
+        except Exception as e:
+            log.error("scout_deep_dive_failed", deal_id=deal_id, error=str(e))
         
     return {"property_data": property_data}
