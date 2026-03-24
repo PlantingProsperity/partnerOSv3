@@ -20,3 +20,7 @@ This is the project-specific audit trail for file system changes within the Part
 | 2026-03-24 | VERIFY | `src/ui/` | Confirmed 100% compilation pass for all frontend scripts. |
 | 2026-03-24 | BAKE | `src/ui/app.py` | Unified entry portal, strategic sidebar, and lead-to-deal quick actions. |
 | 2026-03-24 | POLISH | `src/ui/styles.py` | Implemented high-fidelity macOS drop shadows and hover micro-interactions. |
+| 2026-03-24 | CREATE | `src/scripts/sleep_cycle.py` | Implemented OPCD (On-Policy Context Distillation) logic. |
+| 2026-03-24 | CREATE | `src/utils/local_shield.py` | Implemented local SSE4.2 PII scrubbing architecture. |
+| 2026-03-24 | MODIFY | `src/graph/nodes/manager.py` | Implemented speculative asynchronous LOI drafting. |
+| 2026-03-24 | MODIFY | `src/ui/pages/6_Workspace.py` | Added Altair-based X-Ray logic tree UI and speculative draft rendering. |

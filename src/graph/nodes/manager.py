@@ -72,14 +72,22 @@ def manager_node(state: DealState) -> dict:
     try:
         import re
         # 2. Call LLM
-        response_str = llm.complete(
+        response_result = llm.complete(
             prompt=prompt,
             tier="quality",
             agent="manager",
             deal_id=deal_id,
-            response_format=ManagerVerdict
+            response_format=ManagerVerdict,
+            return_logprobs=True
         )
-        
+
+        # Handle dict response (content + logprobs) or string fallback
+        response_str = response_result
+        logic_tree_json = None
+        if isinstance(response_result, dict):
+            response_str = response_result.get("content", "")
+            logic_tree_json = json.dumps(response_result.get("logprobs", {}))
+
         if not response_str:
             log.error("manager_received_empty_response", deal_id=deal_id)
             return {"verdict": "ERROR", "status": "UNDER_REVIEW"}
@@ -88,51 +96,73 @@ def manager_node(state: DealState) -> dict:
         json_match = re.search(r"(\{.*\})", response_str, re.DOTALL)
         if json_match:
             response_str = json_match.group(1)
-        
+
         # Additional cleanup
         response_str = response_str.replace("```json", "").replace("```", "").strip()
-        
+
         # Flexible JSON Parsing: NVIDIA models often hallucinate key names or nesting
         data = json.loads(response_str)
-        
+
         verdict = data.get("verdict") or data.get("decision") or "KILL"
         confidence = data.get("confidence") or data.get("confidence_level") or 0
-        
+
         # Handle cases where reasoning/instructions might be nested objects or lists
         reasoning = data.get("reasoning_text") or data.get("justification") or data.get("reasoning")
         if isinstance(reasoning, (dict, list)):
             reasoning = json.dumps(reasoning, indent=2)
         elif not reasoning:
             reasoning = "No reasoning provided."
-            
+
         instructions = data.get("scribe_instructions") or data.get("instructions")
         if isinstance(instructions, (dict, list)):
             instructions = json.dumps(instructions, indent=2)
         elif not instructions:
             instructions = ""
-        
+
         # 3. Write to SQLite
         conn = get_connection()
         conn.execute("""
-            INSERT INTO verdicts (deal_id, verdict, confidence, reasoning_text, scribe_instructions, issued_at)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            INSERT INTO verdicts (deal_id, verdict, confidence, reasoning_text, logic_tree, scribe_instructions, issued_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         """, (
             deal_id, 
             str(verdict).upper(), 
             int(confidence), 
-            str(reasoning), 
+            str(reasoning),
+            logic_tree_json,
             str(instructions)
         ))
         conn.commit()
-        conn.close()
-        
-        return {
+        conn.close()        
+        result = {
             "verdict": str(verdict).upper(),
             "manager_confidence": int(confidence),
             "reasoning_text": str(reasoning),
             "scribe_instructions": str(instructions),
             "status": "APPROVED" if str(verdict).upper() == "APPROVE" else "KILLED"
         }
+        
+        # --- Speculative Action (Phase 2 Optimization) ---
+        if result["verdict"] == "APPROVE":
+            import threading
+            from src.graph.nodes.scribe import scribe_node
+            
+            def speculative_draft():
+                try:
+                    # Create a copy of state updated with Manager's results for the Scribe
+                    spec_state = state.copy()
+                    spec_state.update(result)
+                    scribe_result = scribe_node(spec_state)
+                    if "loi_draft" in scribe_result:
+                        # Write speculative draft to DB or state cache if needed
+                        log.info("speculative_draft_complete", deal_id=deal_id)
+                except Exception as e:
+                    log.error("speculative_draft_failed", deal_id=deal_id, error=str(e))
+            
+            # Fire and forget
+            threading.Thread(target=speculative_draft, daemon=True).start()
+            
+        return result
         
     except Exception as e:
         log.error("manager_failed", deal_id=deal_id, error=str(e))

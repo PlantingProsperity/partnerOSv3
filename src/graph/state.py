@@ -37,3 +37,4 @@ class DealState(TypedDict):
     manager_confidence: int
     scribe_instructions: str
     loi_draft: str
+    speculative_drafts: Annotated[dict, merge_dicts]

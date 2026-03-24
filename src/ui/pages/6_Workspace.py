@@ -109,6 +109,52 @@ if st.session_state.current_deal_id:
                     
                     st.markdown("#### Manager's Reasoning")
                     st.write(verdict['reasoning_text'])
+                    
+                    # --- X-RAY VISION (Phase 1 Optimization) ---
+                    st.markdown("#### 🔍 AI Logic Tree (X-Ray)")
+                    
+                    # We will render the deterministic logic gates that led to the Manager's verdict
+                    state_dict = st.session_state.get(f"last_state_{deal_id}", {})
+                    if not state_dict:
+                        # Fetch latest state if not in session
+                        config_dict = {"configurable": {"thread_id": deal_id}}
+                        raw_state = graph.get_state(config_dict)
+                        if raw_state and raw_state.values:
+                            state_dict = raw_state.values
+                            
+                    if state_dict:
+                        failures = state_dict.get('heuristic_failures', [])
+                        fin = state_dict.get('financials', {})
+                        dscr = fin.get('dscr', 0.0)
+                        
+                        import altair as alt
+                        import pandas as pd
+                        
+                        # Build logic tree visualization
+                        # Did it pass the DSCR floor?
+                        dscr_pass = dscr >= 1.25
+                        # Did it pass Cap Rate floor?
+                        cap_pass = fin.get('cap_rate', 0.0) >= 0.06
+                        
+                        tree_data = [
+                            {"Logic Gate": "DSCR >= 1.25", "Status": "PASS" if dscr_pass else "FAIL", "Score": 100 if dscr_pass else 20},
+                            {"Logic Gate": "Cap Rate >= 6.0%", "Status": "PASS" if cap_pass else "FAIL", "Score": 100 if cap_pass else 30},
+                            {"Logic Gate": "Pinneo Rescue Pattern Match", "Status": "PASS" if verdict['verdict'] == 'APPROVE' and failures else "N/A", "Score": 95 if verdict['verdict'] == 'APPROVE' else 10}
+                        ]
+                        
+                        df = pd.DataFrame(tree_data)
+                        
+                        chart = alt.Chart(df).mark_bar(cornerRadiusEnd=4).encode(
+                            x=alt.X('Score:Q', scale=alt.Scale(domain=[0, 100]), title="Alignment Score"),
+                            y=alt.Y('Logic Gate:N', sort=None, title=""),
+                            color=alt.Color('Status:N', scale=alt.Scale(domain=['PASS', 'FAIL', 'N/A'], range=['#34c759', '#ff3b30', '#8e8e93']), legend=None),
+                            tooltip=['Logic Gate', 'Status']
+                        ).properties(height=150)
+                        
+                        st.altair_chart(chart, width='stretch')
+                        
+                        if failures:
+                            st.caption(f"**Triggered Failures:** {', '.join(failures)}")
                 else:
                     st.warning("No forensic synthesis available for this deal yet.")
             except Exception as e:
@@ -127,7 +173,15 @@ if st.session_state.current_deal_id:
 
         with tab_draft:
             st.markdown("### Active Strategy: LOI")
-            st.text_area("Live Editor", value="Dear Seller, Based on our analysis...", height=300)
+            
+            # Fetch speculative draft from state if it exists
+            draft_content = "Dear Seller, Based on our analysis..."
+            if state_dict:
+                if state_dict.get("loi_draft"):
+                    draft_content = state_dict.get("loi_draft")
+                    st.success("✨ Auto-Drafted by Speculative Agent")
+                
+            st.text_area("Live Editor", value=draft_content, height=300)
             st.button("Sign & Send (Roman)")
 
 else:

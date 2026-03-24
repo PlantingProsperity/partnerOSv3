@@ -98,7 +98,13 @@ def cfo_extract_node(state: DealState) -> dict:
             doc_path = Path(financial_doc_paths[0])
             log.info("cfo_parsing_document", path=str(doc_path))
             document_content = _parse_document(doc_path)
-            log.info("cfo_document_parsed", length=len(str(document_content)))
+            
+            # Phase 4 Optimization: Local Hardware-Aware PII Scrubbing
+            from src.utils.local_shield import LocalPrivacyShield
+            shield = LocalPrivacyShield()
+            document_content = shield.scrub_text(str(document_content))
+            
+            log.info("cfo_document_parsed_and_scrubbed", length=len(str(document_content)))
             
             prompt = """
             You are an expert commercial real estate underwriter. 
