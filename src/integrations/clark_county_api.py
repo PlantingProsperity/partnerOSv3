@@ -20,6 +20,7 @@ import time
 import json
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
+from pyproj import Transformer
 from src.utils.logger import get_logger
 
 log = get_logger("integration.clark_county_api")
@@ -27,6 +28,9 @@ log = get_logger("integration.clark_county_api")
 BASE_URL = "https://gis.clark.wa.gov/arcgisfed/rest/services"
 # Some services are on arcgisfed2
 BASE_URL_2 = "https://gis.clark.wa.gov/arcgisfed2/rest/services"
+
+# Coordinate Transformer: 2286 (State Plane) -> 4326 (WGS84)
+TRANSFORMER = Transformer.from_crs("epsg:2286", "epsg:4326", always_xy=True)
 
 class ClarkCountyAPIError(Exception):
     """Raised when the Clark County GIS REST API returns an error."""
@@ -39,7 +43,7 @@ class ClarkCountyAPIError(Exception):
 def _make_request(url: str, params: Dict, use_get: bool = True) -> Dict:
     """Internal helper for making requests with backoff."""
     params['f'] = 'json'
-    params['outSR'] = '4326'
+    # Removed outSR=4326 as hosted services often fail on dynamic projection
     
     retries = 0
     max_retries = 3
@@ -64,7 +68,11 @@ def _make_request(url: str, params: Dict, use_get: bool = True) -> Dict:
                 
             data = r.json()
             if 'error' in data:
-                raise ClarkCountyAPIError(url, r.status_code, data['error'].get('message', 'Unknown GIS Error'))
+                # Specific check for numeric vs string Prop_id issues
+                msg = data['error'].get('message', 'Unknown GIS Error')
+                if "Unable to complete operation" in msg:
+                    log.error("gis_operation_failed", url=url, params=params)
+                raise ClarkCountyAPIError(url, r.status_code, msg)
                 
             # Adhere to 0.2s delay between requests per spec
             time.sleep(0.2)
@@ -80,9 +88,13 @@ def _make_request(url: str, params: Dict, use_get: bool = True) -> Dict:
 def fetch_parcel_by_prop_id(prop_id: str) -> Optional[Dict]:
     """Fetch a single parcel record from TaxlotsPublic by its Prop_id."""
     url = f"{BASE_URL}/ClarkView_Public/TaxlotsPublic/MapServer/0/query"
+    
+    # Coerce prop_id to numeric if possible for TaxlotsPublic
+    where_clause = f"Prop_id = {prop_id}" if prop_id.isdigit() else f"Prop_id = '{prop_id}'"
+    
     params = {
-        'where': f"Prop_id = '{prop_id}'",
-        'outFields': "Prop_id,Pt1Desc,Pt2Desc,Zone1,Zone2,MktTotVal,MktLandVal,MktBldgVal,TaxTotVal,TaxStat,BldgYrBlt,BldgEffYrBlt,BldgStyle,Nbrhd,AssrSqFt,CurrentUse,NewCon,AvYear",
+        'where': where_clause,
+        'outFields': "*", # Fetch all fields for maximum signals
         'returnGeometry': 'true'
     }
     
@@ -95,37 +107,49 @@ def fetch_parcel_by_prop_id(prop_id: str) -> Optional[Dict]:
     attrs = f.get('attributes', {})
     geom = f.get('geometry', {})
     
+    # Calculate Centroid from rings (State Plane Feet)
+    lat, lon = None, None
+    rings = geom.get('rings', [])
+    if rings and rings[0]:
+        avg_x = sum(pt[0] for pt in rings[0]) / len(rings[0])
+        avg_y = sum(pt[1] for pt in rings[0]) / len(rings[0])
+        # Transform to Lat/Lon
+        lon, lat = TRANSFORMER.transform(avg_x, avg_y)
+    
     return {
-        'prop_id': attrs.get('Prop_id'),
-        'pt1_desc': attrs.get('Pt1Desc'),
+        'prop_id': str(attrs.get('Prop_id')),
+        'pt1_desc': attrs.get('PT1DESC'),
         'pt2_desc': attrs.get('Pt2Desc'),
-        'zone1': attrs.get('Zone1'),
+        'zone1': str(attrs.get('ZoneDesc', '')).strip(),
         'zone2': attrs.get('Zone2'),
         'mkt_tot_val': attrs.get('MktTotVal'),
         'mkt_land_val': attrs.get('MktLandVal'),
         'mkt_bldg_val': attrs.get('MktBldgVal'),
         'tax_tot_val': attrs.get('TaxTotVal'),
-        'tax_stat': attrs.get('TaxStat'),
+        'tax_stat': str(attrs.get('TaxStat', '')).strip(),
         'bldg_yr_blt': attrs.get('BldgYrBlt'),
         'bldg_eff_yr_blt': attrs.get('BldgEffYrBlt'),
         'bldg_style': attrs.get('BldgStyle'),
-        'nbrhd': attrs.get('Nbrhd'),
+        'nbrhd': attrs.get('NBRHD'),
         'assrSqFt': attrs.get('AssrSqFt'),
         'current_use': attrs.get('CurrentUse'),
         'new_con_val': attrs.get('NewCon'),
         'av_year': attrs.get('AvYear'),
-        'lat': geom.get('y'),
-        'lon': geom.get('x')
+        'lat': lat,
+        'lon': lon,
+        'complan': attrs.get('ComplanDesc'),
+        'bldg_cond': attrs.get('BldgCond'),
+        'last_sale_date': attrs.get('SaleDate')
     }
 
 def fetch_parcel_by_address(address: str) -> Optional[Dict]:
-    """Resolve a street address to a parcel record."""
-    url = f"{BASE_URL}/ClarkView_Public/SiteAddress/MapServer/0/query"
-    # Clean address for fuzzy matching
-    clean_addr = address.upper().replace("VANCOUVER", "").replace("WA", "").strip()
+    """Resolve a street address to a parcel record using TaxlotsPublic."""
+    url = f"{BASE_URL}/ClarkView_Public/TaxlotsPublic/MapServer/0/query"
+    # Clean address for fuzzy matching (716 E MCLOUGHLIN BLVD)
+    clean_addr = address.upper().replace("VANCOUVER", "").replace("WA", "").replace(",", "").strip()
     params = {
-        'where': f"UPPER(FULLADDRESS) LIKE '%{clean_addr}%'",
-        'outFields': "FULLADDRESS,PROP_ID,PARCEL_NUM",
+        'where': f"SitusAddrsFull LIKE '{clean_addr}%'",
+        'outFields': "Prop_id,SitusAddrsFull,Zone1,MktTotVal",
         'resultRecordCount': 1
     }
     
@@ -135,7 +159,7 @@ def fetch_parcel_by_address(address: str) -> Optional[Dict]:
         log.warning("address_lookup_failed", address=address)
         return None
         
-    prop_id = features[0]['attributes'].get('PROP_ID')
+    prop_id = str(features[0]['attributes'].get('Prop_id'))
     if not prop_id:
         return None
         
@@ -174,8 +198,15 @@ def fetch_sale_history(prop_id: str, valid_only: bool = True) -> List[Dict]:
         })
     return results
 
-def compute_hold_years(prop_id: str) -> Optional[int]:
-    """Compute the number of years since the most recent valid sale."""
+def compute_hold_years(prop_id: str, last_sale_ms: Optional[int] = None) -> Optional[int]:
+    """
+    Compute the number of years since the most recent valid sale.
+    Can take a pre-fetched sale date ms to save API calls.
+    """
+    if last_sale_ms:
+        sale_year = datetime.fromtimestamp(last_sale_ms / 1000, tz=timezone.utc).year
+        return datetime.now(tz=timezone.utc).year - sale_year
+
     sales = fetch_sale_history(prop_id, valid_only=True)
     if not sales:
         return None # Spec: None is treated as HIGH equity signal
@@ -324,10 +355,13 @@ def fetch_strategic_signals(prop_id: str) -> Dict:
         "highway_corridor": False
     }
     
+    # Coerce prop_id to numeric if possible
+    where_clause = f"Prop_id = {prop_id}" if prop_id.isdigit() else f"Prop_id = '{prop_id}'"
+    
     # 1. Check Redevelopment Layer
     try:
         url = f"{BASE_URL}/Redevelopment_by_Parcel/MapServer/0/query"
-        params = {'where': f"Prop_id = '{prop_id}'", 'outFields': '*'}
+        params = {'where': where_clause, 'outFields': '*'}
         data = _make_request(url, params)
         if data.get('features'):
             signals["redevelopment_score"] = "HIGH" # Presence in this layer is a signal
@@ -336,10 +370,13 @@ def fetch_strategic_signals(prop_id: str) -> Dict:
     # 2. Check Revaluation/Inspection History
     try:
         url = f"{BASE_URL}/Assessor/Residential_Revaluation_MAG/MapServer/0/query"
-        params = {'where': f"Prop_id = '{prop_id}'", 'outFields': 'InspectDate'}
+        params = {'where': where_clause, 'outFields': 'InspectDate'}
         data = _make_request(url, params)
         if data.get('features'):
-            signals["last_physical_inspection"] = data['features'][0]['attributes'].get('InspectDate')
+            inspect_val = data['features'][0]['attributes'].get('InspectDate')
+            if inspect_val:
+                # Convert ms to ISO
+                signals["last_physical_inspection"] = datetime.fromtimestamp(inspect_val / 1000, tz=timezone.utc).strftime('%Y-%m-%d')
     except: pass
 
     return signals
@@ -349,14 +386,20 @@ def fetch_shadow_pipeline(lat: float, lon: float, distance_ft: int = 500) -> Lis
     Finds proposed developments within N feet of a coordinate.
     This reveals the 'Shadow Pipeline' of future neighboring projects.
     """
+    # Convert lat/lon to State Plane for spatial query
+    try:
+        x, y = TRANSFORMER.transform(lon, lat, direction='INVERSE')
+    except:
+        return []
+
     url = f"{BASE_URL_2}/DevelopmentPermits/ProposedDevelopments_PublicView/MapServer/0/query"
     params = {
-        'geometry': f"{lon},{lat}",
+        'geometry': f"{x},{y}",
         'geometryType': 'esriGeometryPoint',
         'spatialRel': 'esriSpatialRelIntersects',
         'distance': distance_ft,
         'units': 'esriSRUnit_Foot',
-        'inSR': '4326',
+        'inSR': '102749',
         'outFields': 'MarketingName,SpecificType,Description,NumberOfLots,NumberOfBuildings,StatusDescription'
     }
     
@@ -374,12 +417,17 @@ def fetch_vblm_details(lat: float, lon: float) -> Dict:
     Queries the Vacant Buildable Lands Model (VBLM) for developable truth.
     Uses spatial intersection at the property coordinate.
     """
+    try:
+        x, y = TRANSFORMER.transform(lon, lat, direction='INVERSE')
+    except:
+        return {"vblm_net_acres": None, "vblm_category": None}
+
     url = f"{BASE_URL}/ClarkView_Public/VacantBuildableLandsModel/MapServer/75/query"
     params = {
-        'geometry': f"{lon},{lat}",
+        'geometry': f"{x},{y}",
         'geometryType': 'esriGeometryPoint',
         'spatialRel': 'esriSpatialRelIntersects',
-        'inSR': '4326',
+        'inSR': '102749',
         'outFields': 'acresNet,vblm,isConstrained,isExcluded,excludedDescriptor'
     }
     

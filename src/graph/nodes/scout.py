@@ -6,6 +6,7 @@ the two-tier ArcGIS REST + Playwright architecture.
 """
 
 import datetime
+import json
 from src.graph.state import DealState
 from src.utils.logger import get_logger
 from src.database.db import get_connection
@@ -49,7 +50,7 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
         if gis_data:
             # 2. Extract Tier 1 Metrics
             prop_id = gis_data['prop_id']
-            hold_years = clark_county_api.compute_hold_years(prop_id)
+            hold_years = clark_county_api.compute_hold_years(prop_id, last_sale_ms=gis_data.get('last_sale_date'))
             permit_count = clark_county_api.fetch_permit_count(prop_id)
             
             # --- Phase 5: Secret Strategic Signals ---
