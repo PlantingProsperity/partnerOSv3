@@ -87,72 +87,101 @@ from src.ui.components import bento_card, render_agent_bar
 
 inject_mac_styles()
 
-st.title("Strategic Deal Board")
-st.markdown("<p class='mac-subtext'>High-Leverage Pipeline — From Ingest to Verdict</p>", unsafe_allow_html=True)
+# 1. Custom Kanban Styling
+st.markdown("""
+<style>
+    /* Force horizontal layout for columns */
+    [data-testid="stHorizontalBlock"] {
+        overflow-x: auto !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 20px;
+        padding-bottom: 20px;
+    }
+    
+    /* Ensure columns have a strategic width */
+    [data-testid="column"] {
+        min-width: 320px !important;
+        max-width: 320px !important;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 20px;
+        padding: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .kanban-stage-header {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mac-sub);
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        padding-left: 5px;
+        letter-spacing: 1px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# ... (rest of the New Deal form remains the same) ...
+st.title("Strategic Deal Flow")
+st.markdown("<p class='mac-subtext'>Fasahov Bros. Principal Dashboard • Real-Time Pipeline Velocity</p>", unsafe_allow_html=True)
 
-# ── Strategic Dashboard ────────────────────────────────────────────────────
-st.markdown("### Active Deal Analysis")
+# ── KANBAN ARCHITECTURE ──────────────────────────────────────────────────
+stages = {
+    "INTAKE": "🆕 Intake",
+    "UNDER_REVIEW": "📊 Underwriting",
+    "STRATEGY": "🧠 Strategy",
+    "VERDICT": "💎 Verdict"
+}
+
+cols = st.columns(len(stages))
 
 conn = get_connection()
-# Only show distinct addresses to clean up the 'nonsense' noise
-deals = conn.execute("""
-    SELECT deal_id, address, created_at 
-    FROM deals 
-    GROUP BY address 
-    ORDER BY created_at DESC
-""").fetchall()
+deals = conn.execute("SELECT * FROM deals ORDER BY updated_at DESC").fetchall()
 conn.close()
 
-if not deals:
-    st.info("No active deals in the pipeline.")
-else:
-    for deal in deals:
-        deal_id = deal["deal_id"]
+for i, (stage_key, stage_label) in enumerate(stages.items()):
+    with cols[i]:
+        st.markdown(f'<div class="kanban-stage-header">{stage_label}</div>', unsafe_allow_html=True)
         
-        # Check LangGraph State
-        config_dict = {"configurable": {"thread_id": deal_id}}
-        state = graph.get_state(config_dict)
-        
-        if not state.values:
-            continue # Skip ghost entries
-
-        with st.container(border=True):
-            cols = st.columns([3, 1, 1])
-            cols[0].markdown(f"### {deal['address']}")
-            cols[0].caption(f"Principal Thread ID: `{deal_id}`")
+        # Filter deals for this stage
+        for deal in deals:
+            deal_id = deal["deal_id"]
+            config_dict = {"configurable": {"thread_id": deal_id}}
+            state = graph.get_state(config_dict)
             
-            # --- STATUS HUB ---
-            if state.next and 'cfo_calculate' in state.next:
-                cols[1].warning("🛑 CFO PENDING")
-                with st.expander("📝 Verify Forensic Extraction", expanded=False):
-                    st.write("The CFO has extracted metrics. Please verify before the Manager issues a verdict.")
-                    # We can eventually embed the verification form here
-                    st.page_link("pages/5_CFO_Verification.py", label="Open Verification Suite", icon="📊")
+            # Map LangGraph state to Kanban stage
+            current_deal_stage = "INTAKE"
+            if not state.values: continue
             
-            elif not state.next: # Graph is finished
-                verdict = state.values.get("verdict", "UNKNOWN")
-                if verdict == "APPROVE":
-                    cols[1].success("💎 APPROVED")
-                else:
-                    cols[1].error("💀 KILLED")
+            if state.next:
+                if 'cfo_calculate' in state.next: current_deal_stage = "UNDER_REVIEW"
+                elif 'manager' in state.next: current_deal_stage = "STRATEGY"
+            elif not state.next:
+                current_deal_stage = "VERDICT"
                 
-                # --- THE 'STORY' (RESCUE LOGIC) ---
-                fin = state.values.get("financials", {})
-                reasoning = state.values.get("reasoning_text", "No synthesis provided.")
-                
-                m1, m2, m3 = st.columns([1, 1, 3])
-                m1.metric("DSCR", f"{fin.get('dscr', 0.0):.2f}")
-                m2.metric("Cap Rate", f"{fin.get('cap_rate', 0.0)*100:.1f}%")
-                
-                # The primary value add: The Manager's Logic
-                m3.markdown(f"**Principal's Counsel:** {reasoning[:250]}...")
-                
-                if verdict == "APPROVE":
-                    st.page_link("pages/6_Workspace.py", label="Open Deal Workspace", icon="🏗️")
-            else:
-                cols[1].info(f"🔄 {state.next[0]}")
+            if current_deal_stage == stage_key:
+                with st.container():
+                    # --- THE DEAL CARD ---
+                    verdict = state.values.get("verdict", "PENDING")
+                    bg_color = "rgba(10, 132, 255, 0.1)" # Default Blue
+                    if verdict == "APPROVE": bg_color = "rgba(52, 199, 89, 0.1)" # Green
+                    elif verdict == "KILL": bg_color = "rgba(255, 59, 48, 0.1)" # Red
+                    
+                    st.markdown(f\"\"\"
+                    <div class="bento-card" style="background: {bg_color}; padding: 15px; margin-bottom: 10px; min-height: 120px;">
+                        <div style="font-weight: 700; font-size: 15px; color: white;">{deal['address']}</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 5px;">ID: {deal_id[:8]}</div>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                        <div style="font-size: 13px; font-style: italic; color: rgba(255,255,255,0.8);">
+                            {state.values.get('reasoning_text', 'Third Partner is analyzing...').split('.')[0]}
+                        </div>
+                    </div>
+                    \"\"\", unsafe_allow_html=True)
+                    
+                    # Direct Action Links
+                    if stage_key == "UNDER_REVIEW":
+                        st.page_link("pages/5_CFO_Verification.py", label="Verify Forensics", icon="📊")
+                    elif stage_key == "VERDICT":
+                        st.page_link("pages/6_Workspace.py", label="Open Workspace", icon="🏗️")
 
 # AGENT STATUS BAR
 render_agent_bar()
