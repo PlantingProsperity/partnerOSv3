@@ -25,9 +25,9 @@ AGENT_MODELS = {
     "librarian": "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct", # Native multimodal ingestion
     "profiler": "nvidia_nim/nvidia/mistral-nemo-minitron-8b-8k-instruct", # Rapid RAG analysis
     
-    # High-Throughput Agentic Reasoning (The "Forensic" & "Firehouse" Tiers)
+    # High-Throughput Agentic Reasoning (The "Firehouse" Tier)
     "cfo_p1": "nvidia_nim/qwen/qwen3-coder-480b-a35b-instruct", # Rigid JSON adherence
-    "prospect_sourcer": "nvidia_nim/meta/llama-4-scout-17b-16e-instruct", # 10M token context window
+    "prospect_sourcer": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b", # Confirmed stable high-throughput
     "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b", # Fast agentic prose
     
     # The Frontier Generalists (The "Principal" Tier)
