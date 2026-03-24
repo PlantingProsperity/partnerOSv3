@@ -7,6 +7,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+from src.ui.styles import inject_mac_styles
+inject_mac_styles()
+
 st.title("Partner OS")
 st.markdown("### The Third Partner — Fasahov Bros. Brokerage")
 
