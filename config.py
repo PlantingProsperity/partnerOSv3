@@ -82,3 +82,18 @@ RCLONE_SYNC_TIMEOUT:   int = 300           # ms — ADR-H02
 # ── AI Budget (v3.2) ──────────────────────────────────────────────────────
 DAILY_TOKEN_BUDGET:   int = 1_000_000
 AUDIO_TOKEN_WARNING:  int = 800_000
+
+# ── Clark County Data Ingestion (Sprint S3) ──────────────────────────────────
+PACS_ZIP_URL = "https://gis.clark.wa.gov/openDataHub/PacsData/PACS_OpenData.zip"
+GIS_VOL1_URL = "https://www.arcgis.com/sharing/rest/content/items/aac861841b8041b581cda3f05632e016/data"
+GIS_VOL2_URL = "https://www.arcgis.com/sharing/rest/content/items/c31b0716734c4cb19069c390d18e1353/data"
+ARCGIS_REST_ROOT = "https://gis.clark.wa.gov/arcgisfed/rest/services"
+REFRESH_CRON = "0 3 * * 3"  # First Wednesday 3 AM (matches county monthly cadence)
+
+ARCGIS_LAYERS = {
+    "taxlots": f"{ARCGIS_REST_ROOT}/ClarkView_Public/TaxlotsPublic/MapServer/0",
+    "centroids": f"{ARCGIS_REST_ROOT}/ClarkView_Public/Centroid/MapServer/0",
+    "zoning": f"{ARCGIS_REST_ROOT}/ClarkView_Public/Zoning/MapServer/0",
+    "building_footprints": f"{ARCGIS_REST_ROOT}/ClarkView_Public/BuildingFootprints/MapServer/0",
+}
+
