@@ -344,6 +344,60 @@ def fetch_strategic_signals(prop_id: str) -> Dict:
 
     return signals
 
+def fetch_shadow_pipeline(lat: float, lon: float, distance_ft: int = 500) -> List[Dict]:
+    """
+    Finds proposed developments within N feet of a coordinate.
+    This reveals the 'Shadow Pipeline' of future neighboring projects.
+    """
+    url = f"{BASE_URL_2}/DevelopmentPermits/ProposedDevelopments_PublicView/MapServer/0/query"
+    params = {
+        'geometry': f"{lon},{lat}",
+        'geometryType': 'esriGeometryPoint',
+        'spatialRel': 'esriSpatialRelIntersects',
+        'distance': distance_ft,
+        'units': 'esriSRUnit_Foot',
+        'inSR': '4326',
+        'outFields': 'MarketingName,SpecificType,Description,NumberOfLots,NumberOfBuildings,StatusDescription'
+    }
+    
+    try:
+        data = _make_request(url, params)
+        results = []
+        for f in data.get('features', []):
+            results.append(f['attributes'])
+        return results
+    except:
+        return []
+
+def fetch_vblm_details(lat: float, lon: float) -> Dict:
+    """
+    Queries the Vacant Buildable Lands Model (VBLM) for developable truth.
+    Uses spatial intersection at the property coordinate.
+    """
+    url = f"{BASE_URL}/ClarkView_Public/VacantBuildableLandsModel/MapServer/75/query"
+    params = {
+        'geometry': f"{lon},{lat}",
+        'geometryType': 'esriGeometryPoint',
+        'spatialRel': 'esriSpatialRelIntersects',
+        'inSR': '4326',
+        'outFields': 'acresNet,vblm,isConstrained,isExcluded,excludedDescriptor'
+    }
+    
+    try:
+        data = _make_request(url, params)
+        features = data.get('features', [])
+        if features:
+            attrs = features[0]['attributes']
+            return {
+                "vblm_net_acres": attrs.get('acresNet'),
+                "vblm_category": attrs.get('vblm'),
+                "vblm_constrained": bool(attrs.get('isConstrained')),
+                "vblm_excluded": attrs.get('excludedDescriptor')
+            }
+    except:
+        pass
+    return {"vblm_net_acres": None, "vblm_category": None}
+
 def run_equity_screen(
     property_types: Optional[List[str]] = None,
     hold_years_min: int = 10,

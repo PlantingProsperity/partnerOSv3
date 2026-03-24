@@ -56,6 +56,14 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
             signals = clark_county_api.fetch_strategic_signals(prop_id)
             property_data.update(signals)
             
+            # --- Phase 6: Shadow Intelligence (Spatial) ---
+            lat, lon = gis_data.get('lat'), gis_data.get('lon')
+            if lat and lon:
+                shadow = clark_county_api.fetch_shadow_pipeline(lat, lon)
+                vblm = clark_county_api.fetch_vblm_details(lat, lon)
+                property_data["shadow_pipeline"] = shadow
+                property_data.update(vblm)
+            
             property_data["tax_status"] = "DELINQUENT" if gis_data.get('tax_stat') else "CURRENT"
             property_data["hold_years"] = hold_years
             property_data["zoning"] = gis_data.get('zone1')
@@ -78,11 +86,15 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
                 INSERT INTO property_records (
                     deal_id, prop_id, zone1, mkt_tot_val, tax_stat, 
                     bldg_yr_blt, nbrhd, assrSqFt, sale_date_most_recent,
-                    permit_count_5yr, created_at, scrape_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                    permit_count_5yr, redevelopment_score, last_physical_inspection,
+                    shadow_pipeline_json, vblm_net_acres, vblm_category,
+                    created_at, scrape_status, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(prop_id) DO UPDATE SET
                     mkt_tot_val = excluded.mkt_tot_val,
                     tax_stat = excluded.tax_stat,
+                    shadow_pipeline_json = excluded.shadow_pipeline_json,
+                    vblm_net_acres = excluded.vblm_net_acres,
                     updated_at = CURRENT_TIMESTAMP
             """, (
                 deal_id, prop_id, property_data["zoning"], property_data["mkt_tot_val"],
@@ -90,6 +102,11 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
                 gis_data.get('nbrhd'), gis_data.get('assrSqFt'),
                 None, # TODO: sale_date
                 permit_count,
+                property_data.get("redevelopment_score"),
+                property_data.get("last_physical_inspection"),
+                json.dumps(property_data.get("shadow_pipeline")),
+                property_data.get("vblm_net_acres"),
+                property_data.get("vblm_category"),
                 "PARTIAL" # REST only
             ))
             conn.commit()
