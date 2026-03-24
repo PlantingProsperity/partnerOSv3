@@ -162,6 +162,21 @@ if st.session_state.current_deal_id:
 
         with tab_vault:
             st.markdown("### Deal Jacket Documents")
+            
+            # --- TIER 3 FORENSIC DEEP-LINKS ---
+            st.markdown("#### 🔍 External Forensic Portals")
+            col_a, col_b = st.columns(2)
+            
+            # Pad prop_id for Clark County systems
+            search_id = deal_id.split('_')[-1] # Simple extraction
+            if len(search_id) < 8: search_id = "41550000" # Fallback for test deals
+            
+            col_a.link_button("📜 Auditor: Recorded Docs", 
+                             f"https://e-docs.clark.wa.gov/LandmarkWeb/Search/index?searchType=parcelid&parcelId={search_id}")
+            col_b.link_button("📸 GIS: Property Photos", 
+                             f"https://gis.clark.wa.gov/gishome/property/index.cfm?fuseaction=factsheet&account={search_id}")
+            
+            st.markdown("---")
             # Logic to list files in deals/{deal_id}/documents/
             deal_dir = config.BASE_DIR / "deals" / deal_id / "documents"
             if deal_dir.exists():
