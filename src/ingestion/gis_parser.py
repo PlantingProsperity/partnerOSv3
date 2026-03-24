@@ -35,59 +35,67 @@ def download_gis_volume(url: str, vol_name: str) -> Path:
     log.info(f"gis_download_complete_{vol_name}", path=str(local_path))
     return local_path
 
-def process_taxlots(zip_path: Path):
-    """Extracts and parses the TaxlotsPublic shapefile."""
+def process_shapefiles(zip_path: Path):
+    """Extracts and parses multiple GIS shapefiles (Taxlots, Zoning, Footprints)."""
     extract_dir = config.STAGING_DIR / "gis_extracted"
     extract_dir.mkdir(exist_ok=True)
     
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
         
-    # Find the .shp file
-    shp_files = list(extract_dir.glob("**/*TaxlotsPublic.shp"))
-    if not shp_files:
-        log.error("taxlots_shp_not_found")
-        return
-        
-    log.info("parsing_taxlots_shp", path=str(shp_files[0]))
-    gdf = gpd.read_file(shp_files[0])
-    
-    # 1. Calculate centroids in the native PROJECTED CRS (for accuracy)
-    # Most Clark County GIS files are in State Plane Feet
-    gdf['centroid_lat_native'] = gdf.geometry.centroid.y
-    gdf['centroid_lon_native'] = gdf.geometry.centroid.x
-    
-    # 2. Transform to WGS84 for the final Lat/Lon export
-    gdf_wgs84 = gdf.to_crs(epsg=4326)
-    gdf_wgs84['centroid_lat'] = gdf_wgs84.geometry.centroid.y
-    gdf_wgs84['centroid_lon'] = gdf_wgs84.geometry.centroid.x
-    
-    # 3. Handle case-insensitive Prop_id (GIS fields are often uppercase)
-    prop_col = next((c for c in gdf_wgs84.columns if c.upper() == 'PROP_ID'), None)
-    if not prop_col:
-        prop_col = next((c for c in gdf_wgs84.columns if 'PARCEL' in c.upper()), None)
-        
-    if not prop_col:
-        log.error("property_id_column_not_found_in_shp", columns=list(gdf_wgs84.columns))
-        return
-
-    # 4. Load into DB
     conn = get_connection()
-    df_load = pd.DataFrame({
-        'prop_id': gdf_wgs84[prop_col].astype(str),
-        'centroid_lat': gdf_wgs84['centroid_lat'],
-        'centroid_lon': gdf_wgs84['centroid_lon']
-    })
     
-    df_load.to_sql("raw_pacs_centroid", conn, if_exists="replace", index=False)
+    # 1. TAXLOTS & CENTROIDS
+    tax_shp = list(extract_dir.glob("**/*TaxlotsPublic.shp"))
+    if tax_shp:
+        log.info("parsing_taxlots_shp", path=str(tax_shp[0]))
+        gdf = gpd.read_file(tax_shp[0])
+        # Project to WGS84 for Lat/Lon
+        gdf_wgs84 = gdf.to_crs(epsg=4326)
+        gdf_wgs84['centroid_lat'] = gdf_wgs84.geometry.centroid.y
+        gdf_wgs84['centroid_lon'] = gdf_wgs84.geometry.centroid.x
+        
+        df_load = pd.DataFrame({
+            'prop_id': gdf_wgs84['Prop_id'].astype(str),
+            'centroid_lat': gdf_wgs84['centroid_lat'],
+            'centroid_lon': gdf_wgs84['centroid_lon']
+        })
+        df_load.to_sql("raw_pacs_centroid", conn, if_exists="replace", index=False)
+        log.info("taxlots_centroids_loaded", count=len(df_load))
+
+    # 2. ZONING
+    zoning_shp = list(extract_dir.glob("**/Zoning.shp"))
+    if zoning_shp:
+        log.info("parsing_zoning_shp", path=str(zoning_shp[0]))
+        # We store raw zoning boundaries for spatial joins later
+        # For now, we load the attribute table
+        gdf_zone = gpd.read_file(zoning_shp[0])
+        gdf_zone.to_sql("raw_gis_zoning", conn, if_exists="replace", index=False)
+        log.info("zoning_data_loaded")
+
+    # 3. BUILDING FOOTPRINTS
+    bldg_shp = list(extract_dir.glob("**/BuildingFootprints.shp"))
+    if bldg_shp:
+        log.info("parsing_footprints_shp", path=str(bldg_shp[0]))
+        gdf_bldg = gpd.read_file(bldg_shp[0])
+        # Store essential footprint data
+        df_bldg = pd.DataFrame(gdf_bldg.drop(columns='geometry'))
+        df_bldg.to_sql("raw_gis_footprints", conn, if_exists="replace", index=False)
+        log.info("footprint_data_loaded")
+
     conn.close()
-    log.info("taxlots_centroids_loaded", count=len(df_load))
 
 def run_full_gis_refresh():
-    """Executes the GIS ingestion flow."""
+    """Executes the GIS ingestion flow for all volumes."""
     try:
+        # Volume 1: Taxlots / Zoning
         vol1_path = download_gis_volume(config.GIS_VOL1_URL, "GIS_Vol1")
-        process_taxlots(vol1_path)
+        process_shapefiles(vol1_path)
+        
+        # Volume 2: Environmental / Overlays
+        vol2_path = download_gis_volume(config.GIS_VOL2_URL, "GIS_Vol2")
+        process_shapefiles(vol2_path)
+        
         log.info("gis_full_refresh_complete")
     except Exception as e:
         log.error("gis_refresh_failed", error=str(e))

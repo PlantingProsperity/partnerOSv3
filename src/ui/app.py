@@ -45,7 +45,17 @@ if "checkpointer" not in st.session_state:
 
 # 3. PRINCIPAL GREETING
 st.title("Good Morning, Roman.")
-st.markdown("<p class='mac-subtext'>Fasahov Bros. Brokerage • System Integrity: 100%</p>", unsafe_allow_html=True)
+
+# Data Freshness Check
+try:
+    db_conn = sqlite3.connect(str(config.DB_PATH))
+    last_pacs = db_conn.execute("SELECT ts FROM maintenance_log WHERE job_name = 'pacs_ingest' AND success = 1 ORDER BY ts DESC LIMIT 1").fetchone()
+    db_conn.close()
+    freshness = f"Market Intel: {last_pacs[0]}" if last_pacs else "Market Intel: Pending Full Load"
+except:
+    freshness = "System Integrity: 100%"
+
+st.markdown(f"<p class='mac-subtext'>Fasahov Bros. Brokerage • {freshness}</p>", unsafe_allow_html=True)
 
 # 4. MORNING BRIEF (THE SYNTHESIS)
 st.subheader("Autonomous Synthesis")

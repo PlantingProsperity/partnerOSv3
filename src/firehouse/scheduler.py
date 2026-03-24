@@ -101,6 +101,10 @@ def start_firehouse():
         # 2. Add Heartbeat (30-minute interval) for active background work
         scheduler.add_job(generate_morning_brief, 'interval', minutes=30, id='heartbeat_job', max_instances=1)
         
+        # 3. Data Ingestion Extensions (Sprint S3)
+        from src.firehouse.firehouse_jobs import extend_scheduler
+        extend_scheduler(scheduler)
+        
         scheduler.start()
         log.info("firehouse_scheduler_started")
         
