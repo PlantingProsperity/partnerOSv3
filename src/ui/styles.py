@@ -28,23 +28,25 @@ CSS = """
         -webkit-backdrop-filter: blur(50px);
         border-right: var(--mac-border);
     }
+/* 4. BENTO CARDS */
+.bento-card {
+    background: var(--mac-glass);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: var(--mac-border);
+    border-radius: var(--mac-radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4); /* Deeper shadow for depth */
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-    /* 4. BENTO CARDS */
-    .bento-card {
-        background: var(--mac-glass);
-        backdrop-filter: blur(30px);
-        border: var(--mac-border);
-        border-radius: var(--mac-radius);
-        padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .bento-card:hover {
-        transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.05);
-    }
+.bento-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
 
     /* 5. TYPOGRAPHY */
     h1, h2, h3 {

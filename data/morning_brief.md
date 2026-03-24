@@ -3,7 +3,7 @@
 ### 📊 System Health
 - **Active Deals in Pipeline:** 5
 - **Total Prospects:** 993
-- **Yesterday's Gemini Token Budget Used:** 90.0%
+- **Yesterday's Gemini Token Budget Used:** 100.3%
 
 ### 🎯 AI Sourced Prospects (Top Picks)
 *No new high-priority targets found today or API limit reached.*
