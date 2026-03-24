@@ -88,6 +88,14 @@ class Librarian:
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(response_str)
 
+            # 5. Register in DB to prevent re-transcription
+            file_hash = get_file_hash(file_path)
+            self.conn.execute("""
+                INSERT INTO files (deal_id, file_name, file_path, content_class, content_hash, created_at)
+                VALUES (?, ?, ?, 'SELLER_CORRESPONDENCE', ?, CURRENT_TIMESTAMP)
+            """, (None, file_path.name, str(out_path), file_hash))
+            self.conn.commit()
+
             log.info("transcription_complete", out_path=str(out_path))
             return str(out_path)
 
