@@ -58,6 +58,14 @@ def manager_node(state: DealState) -> dict:
     Hold Years: {property_data.get("hold_years")}
     Tax Status: {property_data.get("tax_status")}
     
+    SYSTEM DIRECTIVE: Perform 'Panoramic Data Forensics'. 
+    Analyze the raw GIS metadata below. Match patterns between building condition, 
+    census tract population trends (PopulationOFM/pph), and specific tax codes 
+    to extrapolate hidden seller motivation.
+    
+    RAW GIS METADATA:
+    {json.dumps(property_data.get('raw_gis_json'), indent=2)}
+    
     HEURISTIC GATES:
     Flagged: {heuristic_flagged}
     Failures: {json.dumps(heuristic_failures)}

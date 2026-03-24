@@ -114,34 +114,30 @@ def fetch_parcel_by_prop_id(prop_id: str) -> Optional[Dict]:
         avg_x = sum(pt[0] for pt in rings[0]) / len(rings[0])
         avg_y = sum(pt[1] for pt in rings[0]) / len(rings[0])
         # Transform to Lat/Lon
-        lon, lat = TRANSFORMER.transform(avg_x, avg_y)
-    
-    return {
-        'prop_id': str(attrs.get('Prop_id')),
-        'pt1_desc': attrs.get('PT1DESC'),
-        'pt2_desc': attrs.get('Pt2Desc'),
-        'zone1': str(attrs.get('ZoneDesc', '')).strip(),
-        'zone2': attrs.get('Zone2'),
-        'mkt_tot_val': attrs.get('MktTotVal'),
-        'mkt_land_val': attrs.get('MktLandVal'),
-        'mkt_bldg_val': attrs.get('MktBldgVal'),
-        'tax_tot_val': attrs.get('TaxTotVal'),
-        'tax_stat': str(attrs.get('TaxStat', '')).strip(),
-        'bldg_yr_blt': attrs.get('BldgYrBlt'),
-        'bldg_eff_yr_blt': attrs.get('BldgEffYrBlt'),
-        'bldg_style': attrs.get('BldgStyle'),
-        'nbrhd': attrs.get('NBRHD'),
-        'assrSqFt': attrs.get('AssrSqFt'),
-        'current_use': attrs.get('CurrentUse'),
-        'new_con_val': attrs.get('NewCon'),
-        'av_year': attrs.get('AvYear'),
-        'lat': lat,
-        'lon': lon,
-        'complan': attrs.get('ComplanDesc'),
-        'bldg_cond': attrs.get('BldgCond'),
-        'last_sale_date': attrs.get('SaleDate')
-    }
+        if rings and rings[0]:
+            lon, lat = TRANSFORMER.transform(avg_x, avg_y)
 
+        # Panoramic Ingest: Return everything for the agents to find patterns
+        result = {
+            'prop_id': str(attrs.get('Prop_id')),
+            'lat': lat,
+            'lon': lon,
+            'raw_attributes': attrs # The 'Wealth of Data'
+        }
+
+        # Map high-priority fields for immediate UI visibility
+        result.update({
+            'pt1_desc': attrs.get('PT1DESC'),
+            'zone1': str(attrs.get('ZoneDesc', '')).strip(),
+            'mkt_tot_val': attrs.get('MktTotVal'),
+            'tax_stat': str(attrs.get('TaxStat', '')).strip(),
+            'bldg_yr_blt': attrs.get('BldgYrBlt'),
+            'nbrhd': attrs.get('NBRHD'),
+            'assrSqFt': attrs.get('AssrSqFt'),
+            'last_sale_date': attrs.get('SaleDate')
+        })
+
+        return result
 def fetch_parcel_by_address(address: str) -> Optional[Dict]:
     """Resolve a street address to a parcel record using TaxlotsPublic."""
     url = f"{BASE_URL}/ClarkView_Public/TaxlotsPublic/MapServer/0/query"

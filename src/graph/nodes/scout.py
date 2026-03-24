@@ -89,13 +89,14 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
                     bldg_yr_blt, nbrhd, assrSqFt, sale_date_most_recent,
                     permit_count_5yr, redevelopment_score, last_physical_inspection,
                     shadow_pipeline_json, vblm_net_acres, vblm_category,
-                    created_at, scrape_status, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
+                    raw_gis_json, created_at, scrape_status, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(prop_id) DO UPDATE SET
                     mkt_tot_val = excluded.mkt_tot_val,
                     tax_stat = excluded.tax_stat,
                     shadow_pipeline_json = excluded.shadow_pipeline_json,
                     vblm_net_acres = excluded.vblm_net_acres,
+                    raw_gis_json = excluded.raw_gis_json,
                     updated_at = CURRENT_TIMESTAMP
             """, (
                 deal_id, prop_id, property_data["zoning"], property_data["mkt_tot_val"],
@@ -108,6 +109,7 @@ def scout_node(state: DealState, config: dict | None = None) -> dict:
                 json.dumps(property_data.get("shadow_pipeline")),
                 property_data.get("vblm_net_acres"),
                 property_data.get("vblm_category"),
+                json.dumps(gis_data.get('raw_attributes')),
                 "PARTIAL" # REST only
             ))
             conn.commit()
