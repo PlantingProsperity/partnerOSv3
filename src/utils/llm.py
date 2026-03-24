@@ -78,24 +78,40 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
         if response_format and "deepseek" not in model.lower() and "qwen" not in model.lower():
             kwargs["response_format"] = response_format
             
-        response = litellm.completion(**kwargs)
+        # --- Reliability: Automated Retries for JSON/API issues ---
+        attempts = 0
+        max_attempts = 2
+        last_error = None
         
-        duration = (datetime.datetime.now() - start_time).total_seconds() * 1000
-        content = response.choices[0].message.content
+        while attempts < max_attempts:
+            try:
+                response = litellm.completion(**kwargs)
+                content = response.choices[0].message.content
+                
+                # If a response format was requested, verify it looks like JSON
+                if response_format and not content.strip().startswith("{"):
+                    raise json.JSONDecodeError("Missing JSON structure", content, 0)
+                
+                duration = (datetime.datetime.now() - start_time).total_seconds() * 1000
+                _log_usage(
+                    agent=agent,
+                    model=model,
+                    call_type="text" if isinstance(prompt, str) else "multimodal",
+                    tokens_in=response.usage.prompt_tokens,
+                    tokens_out=response.usage.completion_tokens,
+                    latency_ms=duration,
+                    deal_id=deal_id,
+                    success=1
+                )
+                return content
+                
+            except (json.JSONDecodeError, Exception) as e:
+                attempts += 1
+                last_error = e
+                log.warning("llm_retry_triggered", agent=agent, attempt=attempts, error=str(e))
+                time.sleep(2) # Backoff
         
-        # Log to llm_calls and gemini_token_usage
-        _log_usage(
-            agent=agent,
-            model=model,
-            call_type="text" if isinstance(prompt, str) else "multimodal",
-            tokens_in=response.usage.prompt_tokens,
-            tokens_out=response.usage.completion_tokens,
-            latency_ms=duration,
-            deal_id=deal_id,
-            success=1
-        )
-            
-        return content
+        raise last_error
         
     except Exception as e:
         log.error("llm_call_failed", agent=agent, model=model, error=str(e))

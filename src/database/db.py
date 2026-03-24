@@ -28,7 +28,7 @@ def get_connection(db_path: Path = config.DB_PATH) -> sqlite3.Connection:
     # Apply PRAGMAs from v3.2 spec
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA synchronous = NORMAL")
-    conn.execute("PRAGMA busy_timeout = 5000")
+    conn.execute("PRAGMA busy_timeout = 30000")
     conn.execute("PRAGMA foreign_keys = ON")
     
     # Apply hardware-tuned cache size (ADR-M01)

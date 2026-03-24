@@ -55,11 +55,16 @@ def run_mass_pipeline(batch_size: int = 10):
                 property_data={'hold_years': lead['hold_years']}
             )
             
-            # 2. Satisfy DB Context (Create Deal)
-            conn.execute("""
+            # 2. Satisfy DB Context (Explicit Transaction)
+            # We use a new connection here to avoid reuse lock issues
+            deal_conn = get_connection()
+            deal_conn.execute("BEGIN IMMEDIATE")
+            deal_conn.execute("""
                 INSERT OR IGNORE INTO deals (deal_id, address, address_slug, jacket_path, thread_id, created_at, updated_at) 
                 VALUES (?, ?, ?, '/deals/auto', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             """, (deal_id, address, deal_id, f"thread_{deal_id}"))
+            deal_conn.commit()
+            deal_conn.close()
             
             # 3. Step 1: Scout Intelligence
             scout_out = scout_node(state)
@@ -70,15 +75,18 @@ def run_mass_pipeline(batch_size: int = 10):
             state.update(verdict_out)
             
             # 5. Step 3: Update Prospect Pipeline Stage
+            update_conn = get_connection()
+            update_conn.execute("BEGIN IMMEDIATE")
             final_stage = 'VERIFIED' if state['verdict'] == 'APPROVE' else 'KILLED'
-            conn.execute("UPDATE prospects SET pipeline_stage = ? WHERE id = ?", (final_stage, lead['id']))
-            conn.commit()
+            update_conn.execute("UPDATE prospects SET pipeline_stage = ? WHERE id = ?", (final_stage, lead['id']))
+            update_conn.commit()
+            update_conn.close()
             
             log.info("lead_processed", address=address, verdict=state['verdict'])
             processed_count += 1
             
-            # Sub-second delay to be kind to the GIS server
-            time.sleep(0.5)
+            # 6. Batch Spacing (Cool-down for DB/API)
+            time.sleep(2.0)
             
         except Exception as e:
             log.error("lead_processing_failed", address=address, error=str(e))
