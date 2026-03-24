@@ -39,8 +39,6 @@ def build_graph() -> StateGraph:
     builder.add_node("scout", scout_node)
     builder.add_node("profiler", profiler_node)
     builder.add_node("explorer", explorer_node)
-    builder.add_node("deal_architect", deal_architect_node)
-    builder.add_node("risk_sentinel", risk_sentinel_node)
     builder.add_node("manager", manager_node)
     builder.add_node("scribe", scribe_node)
     
@@ -67,10 +65,8 @@ def build_graph() -> StateGraph:
     # Serial Enrichment
     builder.add_edge("scout", "explorer")
     
-    # Fan-in to Architecture & Risk
-    builder.add_edge(["explorer", "profiler"], "deal_architect")
-    builder.add_edge("deal_architect", "risk_sentinel")
-    builder.add_edge("risk_sentinel", "manager")
+    # Fan-in to Strategic Manager
+    builder.add_edge(["explorer", "profiler"], "manager")
     
     # Verdict Routing
     builder.add_conditional_edges(

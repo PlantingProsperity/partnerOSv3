@@ -206,12 +206,34 @@ def cfo_calculate_node(state: DealState) -> dict:
     conn.commit()
     conn.close()
     
+    # 4. Phase 3: Transaction Engineering (Grok S5 Mandate)
+    # The CFO orchestrates the Architect and Sentinel for high-stakes forensics
+    from src.graph.nodes.deal_architect import deal_architect_node
+    from src.graph.nodes.risk_sentinel import risk_sentinel_node
+    
+    log.info("triggering_cfo_orchestrated_agents", deal_id=deal_id)
+    
+    # Pack intermediate result for the next nodes
+    financials = {
+        "calculated": True, 
+        "cap_rate": cap_rate, 
+        "dscr": dscr,
+        "below_cap_floor": below_cap,
+        "below_dscr_floor": below_dscr
+    }
+    state["financials"] = financials
+    
+    # Run Deal Architect
+    arch_out = deal_architect_node(state)
+    state.update(arch_out)
+    
+    # Run Risk Sentinel
+    risk_out = risk_sentinel_node(state)
+    state.update(risk_out)
+    
     return {
-        "financials": {
-            "calculated": True, 
-            "cap_rate": cap_rate, 
-            "dscr": dscr,
-            "below_cap_floor": below_cap,
-            "below_dscr_floor": below_dscr
-        }
+        "financials": financials,
+        "proposed_structures": state.get("proposed_structures", []),
+        "risk_monte_carlo": state.get("risk_monte_carlo", {}),
+        "cfo_verified": True
     }
