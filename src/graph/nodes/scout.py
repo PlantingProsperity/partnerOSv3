@@ -1,60 +1,106 @@
+"""
+scout.py — Scout Agent (LangGraph Node)
+
+Collects Clark County property intelligence for a specific deal using 
+the two-tier ArcGIS REST + Playwright architecture.
+"""
+
 import datetime
 from src.graph.state import DealState
 from src.utils.logger import get_logger
 from src.database.db import get_connection
+from src.integrations import clark_county_api
 
 log = get_logger("agent.scout")
 
-def scout_node(state: DealState) -> dict:
+def scout_node(state: DealState, config: dict | None = None) -> dict:
     """
-    Gathers external data by querying the local Clark County data warehouse.
+    LangGraph node function for the Scout agent.
     """
     deal_id = state.get("deal_id")
     address = state.get("address")
     parcel_number = state.get("parcel_number")
-    log.info("executing_scout", deal_id=deal_id, parcel_number=parcel_number)
     
-    conn = get_connection()
-    row = None
-    
-    # 1. Primary lookup via canonical parcel_number
-    if parcel_number:
-        row = conn.execute("SELECT * FROM clark_county_cache WHERE parcel_number = ?", (parcel_number,)).fetchone()
+    # We use config to trigger Tier 2 deep-dives
+    use_playwright = False
+    if config and "configurable" in config:
+        use_playwright = config["configurable"].get("use_playwright", False)
         
-    # 2. Fallback lookup via fuzzy address match
-    if not row and address:
-        log.warning("scout_falling_back_to_address_search", deal_id=deal_id, address=address)
-        row = conn.execute("""
-            SELECT * FROM clark_county_cache 
-            WHERE address LIKE ? COLLATE NOCASE 
-            LIMIT 1
-        """, (f"%{address}%",)).fetchone()
+    log.info("executing_scout_v4", deal_id=deal_id, address=address, use_playwright=use_playwright)
     
-    conn.close()
+    property_data = {
+        "tax_status": "CURRENT",
+        "hold_years": None,
+        "zoning": None
+    }
+    gis_data = None
     
-    property_data = {}
-    if row:
-        log.info("scout_found_property", deal_id=deal_id)
-        property_data["tax_status"] = row["tax_status"]
-        property_data["zoning"] = row["zoning"]
-        
-        # Calculate hold years
-        last_sale = row["last_sale_date"]
-        if last_sale:
-            try:
-                # Assuming YYYY-MM-DD or similar
-                sale_year = int(last_sale[:4])
-                current_year = datetime.datetime.now(datetime.UTC).year
-                property_data["hold_years"] = current_year - sale_year
-            except ValueError:
-                property_data["hold_years"] = None
-        else:
-            property_data["hold_years"] = None
-    else:
-        log.warning("scout_property_not_found", deal_id=deal_id, address=address)
-        # NULL policy per PRD
-        property_data["tax_status"] = None
-        property_data["hold_years"] = None
-        property_data["zoning"] = None
+    # --- Tier 1: ArcGIS REST API (Fast, Bulk) ---
+    try:
+        # 1. Resolve address -> prop_id/parcel
+        if not parcel_number and address:
+            log.info("scout_resolving_address", address=address)
+            gis_data = clark_county_api.fetch_parcel_by_address(address)
+        elif parcel_number:
+            log.info("scout_fetching_parcel", prop_id=parcel_number)
+            # Spec uses prop_id as primary lookup
+            gis_data = clark_county_api.fetch_parcel_by_prop_id(parcel_number)
+            
+        if gis_data:
+            # 2. Extract Tier 1 Metrics
+            prop_id = gis_data['prop_id']
+            hold_years = clark_county_api.compute_hold_years(prop_id)
+            permit_count = clark_county_api.fetch_permit_count(prop_id)
+            
+            property_data["tax_status"] = "DELINQUENT" if gis_data.get('tax_stat') else "CURRENT"
+            property_data["hold_years"] = hold_years
+            property_data["zoning"] = gis_data.get('zone1')
+            property_data["pt1_desc"] = gis_data.get('pt1_desc')
+            property_data["mkt_tot_val"] = gis_data.get('mkt_tot_val')
+            property_data["permit_count_5yr"] = permit_count
+            
+            # 3. Compute Equity Score
+            if hold_years is None or hold_years >= 10:
+                property_data["equity_score"] = "HIGH"
+            elif hold_years >= 5:
+                property_data["equity_score"] = "MEDIUM"
+            else:
+                property_data["equity_score"] = "LOW"
+                
+            # 4. Upsert property_records
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO property_records (
+                    deal_id, prop_id, zone1, mkt_tot_val, tax_stat, 
+                    bldg_yr_blt, nbrhd, assrSqFt, sale_date_most_recent,
+                    permit_count_5yr, created_at, scrape_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                ON CONFLICT(prop_id) DO UPDATE SET
+                    mkt_tot_val = excluded.mkt_tot_val,
+                    tax_stat = excluded.tax_stat,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (
+                deal_id, prop_id, property_data["zoning"], property_data["mkt_tot_val"],
+                property_data["tax_status"], gis_data.get('bldg_yr_blt'),
+                gis_data.get('nbrhd'), gis_data.get('assrSqFt'),
+                None, # TODO: sale_date
+                permit_count,
+                "PARTIAL" # REST only
+            ))
+            conn.commit()
+            property_record_id = cursor.lastrowid
+            conn.close()
+            
+            property_data["property_record_id"] = property_record_id
+            
+    except Exception as e:
+        log.error("scout_tier1_failed", deal_id=deal_id, error=str(e))
+        # Don't crash, let pipeline continue with partial data
+
+    # --- Tier 2: Playwright Deep Dive (Optional, Forensic) ---
+    if use_playwright:
+        log.info("scout_triggering_playwright_deep_dive", deal_id=deal_id)
+        # TODO: Implement scout_scraper integration
         
     return {"property_data": property_data}

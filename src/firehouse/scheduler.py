@@ -12,16 +12,23 @@ def generate_morning_brief():
     """
     Generates the daily Morning Brief summarizing pipeline stats and AI Prospect picks.
     1. Sweeps inbox for new data (ADR-S3-03).
-    2. Runs sourcing analysis.
-    3. Compiles markdown.
+    2. Runs automated GIS hunt for high-equity gems.
+    3. Runs sourcing analysis.
+    4. Compiles markdown.
     """
     log.info("starting_firehouse_intake_sweep")
     from src.graph.nodes.librarian import Librarian
+    from src.firehouse.equity_screen import run_firehouse_hunt
+    
     try:
+        # Step 1: Process local files and audio
         lib = Librarian()
-        # This will process files, transcribe audio via Groq, and sync Brain vectors
         lib._maintain_knowledge()
         lib._sweep_inbox()
+        
+        # Step 2: Run the automated GIS hunt (Tier 1 Scout)
+        run_firehouse_hunt()
+        
     except Exception as e:
         log.error("morning_intake_failed", error=str(e))
 
