@@ -116,9 +116,31 @@ This document is a persistent, meticulous log of the build process, architectura
 
 ---
 
-## Sprint S10: Firehouse (Not Started)
+## Sprint S10: Firehouse & UI Polish (Completed 2026-03-24)
 
-**Goal:** Background scheduling engine for Workflow A.
+**Goal:** Background automation and macOS "Liquid Glass" Command Center.
 **Key Decisions:**
 *   **ADR-S10-01: Top-of-Funnel Raw Data Persistence.**
-    *   *Rationale:* Real estate CSVs (Propwire, Title Companies) contain dozens of valuable columns (Year Built, Bedrooms, Mortgage Balances) that do not fit neatly into our core `prospects` schema (which only demands Owner, Address, Parcel, Equity). Rather than constantly altering the SQL schema for every new CSV format, we added a `raw_data` JSON column to `prospects`. The `csv_intake.py` script now dumps the entire unadulterated Pandas row into this column. The `3_Prospect_Roster.py` UI dynamically unpacks this JSON and joins it to the view, giving the principal 100% visibility into the original data without compromising the rigid core schema required for the LangGraph agents.
+    *   *Rationale:* Added a `raw_data` JSON column to `prospects`. The `csv_intake.py` script now dumps the entire unadulterated row into this column, ensuring 100% metadata preservation without schema bloat.
+*   **ADR-S10-02: macOS "Liquid Glass" Architecture.**
+    *   *Rationale:* To achieve a "Principal-Grade" experience for Roman, the UI was overhauled into a Triple-Pane macOS Command Center (Dock | Mentor | Stage) using glassmorphism and `@st.fragment` for real-time pulsing.
+*   **ADR-S10-03: The Firehouse Heartbeat.**
+    *   *Rationale:* Implemented `APScheduler` to automate 7:00 AM intake sweeps, GIS hunts, and Morning Brief generation. Added `max_instances=1` and 30s busy timeouts to prevent database lock contention during high-throughput scaling.
+
+---
+
+## Sprint S11: Novel Optimizations (Completed 2026-03-24)
+
+**Goal:** Anticipatory intelligence, X-Ray observability, and edge privacy.
+**Key Decisions:**
+*   **ADR-S11-01: The X-Ray UI (Logic Tree).**
+    *   *Rationale:* To eliminate "AI Anxiety," added a live Altair visualization of the Manager's logic gates (DSCR vs. Cap Rate vs. Doctrine). Roman can now see the "Black Box" reasoning in real-time.
+*   **ADR-S11-02: Speculative Action Engine.**
+    *   *Rationale:* Implemented `async` speculative drafting. The moment the Manager issues an `APPROVE` verdict, the Scribe node is triggered in a background thread to pre-draft the LOI, achieving perceived zero-latency.
+*   **ADR-S11-03: OPCD (Sleep Cycle) Distillation.**
+    *   *Rationale:* Solved RAG "Middle Loss" by implementing a weekly "Sleep Cycle" that distills raw transcripts into high-density Semantic Doctrine chunks using the Nemotron Super 120B model.
+*   **ADR-S11-04: Local Privacy Shield (SSE4.2).**
+    *   *Rationale:* Leveraged the i7-950 hardware to perform local PII scrubbing (SSNs, Phones, Emails) via optimized regex/local-LLM hooks before any sensitive data hits the NVIDIA cloud.
+*   **ADR-S11-05: Panoramic GIS Forensics.**
+    *   *Rationale:* Upgraded Scout to ingest 80+ raw GIS fields (Building Condition, Population Trends). The Manager now performs "Cross-Field Forensics" to match building decay against neighborhood demographics to find hidden distress.
+

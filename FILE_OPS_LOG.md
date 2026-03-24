@@ -24,4 +24,6 @@ This is the project-specific audit trail for file system changes within the Part
 | 2026-03-24 | CREATE | `src/utils/local_shield.py` | Implemented local SSE4.2 PII scrubbing architecture. |
 | 2026-03-24 | MODIFY | `src/graph/nodes/manager.py` | Implemented speculative asynchronous LOI drafting. |
 | 2026-03-24 | MODIFY | `src/ui/pages/6_Workspace.py` | Added Altair-based X-Ray logic tree UI and speculative draft rendering. |
+| 2026-03-24 | AUDIT | `partner_os/` | Root-to-tip forensic audit and 3.6GB data pruning completed. |
+| 2026-03-24 | FINALIZE | `GEMINI.md` | Established isolated documentation mandates for future sessions. |
 | 2026-03-24 | CREATE | `src/scripts/pipeline_driver.py` | Implemented Mass Pipeline Driver for systemic 'A+ or Death' filtering. |
