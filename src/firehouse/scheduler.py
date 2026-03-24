@@ -85,10 +85,10 @@ def start_firehouse():
     """
     if not scheduler.running:
         # 1. Schedule the Morning Brief for 7:00 AM every day
-        scheduler.add_job(generate_morning_brief, 'cron', hour=7, minute=0, id='morning_brief_job')
+        scheduler.add_job(generate_morning_brief, 'cron', hour=7, minute=0, id='morning_brief_job', max_instances=1)
         
         # 2. Add Heartbeat (30-minute interval) for active background work
-        scheduler.add_job(generate_morning_brief, 'interval', minutes=30, id='heartbeat_job')
+        scheduler.add_job(generate_morning_brief, 'interval', minutes=30, id='heartbeat_job', max_instances=1)
         
         scheduler.start()
         log.info("firehouse_scheduler_started")

@@ -72,7 +72,7 @@ else:
                         "Value": st.column_config.NumberColumn(format="$%.2f")
                     },
                     hide_index=True,
-                    use_container_width=True,
+                    width='stretch',
                     key=f"editor_{deal_id}"
                 )
             

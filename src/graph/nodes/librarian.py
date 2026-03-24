@@ -91,8 +91,8 @@ class Librarian:
             # 5. Register in DB to prevent re-transcription
             file_hash = get_file_hash(file_path)
             self.conn.execute("""
-                INSERT INTO files (deal_id, file_name, file_path, content_class, content_hash, created_at)
-                VALUES (?, ?, ?, 'SELLER_CORRESPONDENCE', ?, CURRENT_TIMESTAMP)
+                INSERT INTO files (deal_id, original_name, file_path, file_type, content_class, content_hash, discovered_at, status)
+                VALUES (?, ?, ?, 'audio', 'SELLER_CORRESPONDENCE', ?, CURRENT_TIMESTAMP, 'PROCESSED')
             """, (None, file_path.name, str(out_path), file_hash))
             self.conn.commit()
 
