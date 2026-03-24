@@ -82,11 +82,27 @@ with st.expander("➕ Start New Deal Analysis", expanded=False):
             st.success(f"Deal {deal_id} created! It is now waiting for CFO Verification.")
             st.rerun()
 
-# ── Active Deals Dashboard ────────────────────────────────────────────────────
-st.markdown("### Active Deals")
+from src.ui.styles import inject_mac_styles
+from src.ui.components import bento_card, render_agent_bar
+
+inject_mac_styles()
+
+st.title("Strategic Deal Board")
+st.markdown("<p class='mac-subtext'>High-Leverage Pipeline — From Ingest to Verdict</p>", unsafe_allow_html=True)
+
+# ... (rest of the New Deal form remains the same) ...
+
+# ── Strategic Dashboard ────────────────────────────────────────────────────
+st.markdown("### Active Deal Analysis")
 
 conn = get_connection()
-deals = conn.execute("SELECT * FROM deals ORDER BY created_at DESC").fetchall()
+# Only show distinct addresses to clean up the 'nonsense' noise
+deals = conn.execute("""
+    SELECT deal_id, address, created_at 
+    FROM deals 
+    GROUP BY address 
+    ORDER BY created_at DESC
+""").fetchall()
 conn.close()
 
 if not deals:
@@ -95,45 +111,48 @@ else:
     for deal in deals:
         deal_id = deal["deal_id"]
         
+        # Check LangGraph State
+        config_dict = {"configurable": {"thread_id": deal_id}}
+        state = graph.get_state(config_dict)
+        
+        if not state.values:
+            continue # Skip ghost entries
+
         with st.container(border=True):
-            cols = st.columns([3, 2, 2])
-            cols[0].markdown(f"**{deal['address']}**")
-            cols[0].caption(f"ID: `{deal_id}`")
+            cols = st.columns([3, 1, 1])
+            cols[0].markdown(f"### {deal['address']}")
+            cols[0].caption(f"Principal Thread ID: `{deal_id}`")
             
-            # Check LangGraph State
-            config = {"configurable": {"thread_id": deal_id}}
-            state = graph.get_state(config)
+            # --- STATUS HUB ---
+            if state.next and 'cfo_calculate' in state.next:
+                cols[1].warning("🛑 CFO PENDING")
+                with st.expander("📝 Verify Forensic Extraction", expanded=False):
+                    st.write("The CFO has extracted metrics. Please verify before the Manager issues a verdict.")
+                    # We can eventually embed the verification form here
+                    st.page_link("pages/5_CFO_Verification.py", label="Open Verification Suite", icon="📊")
             
-            if not state.values:
-                cols[1].warning("Graph not started")
-            elif state.next and 'cfo_calculate' in state.next:
-                cols[1].error("🛑 Waiting for CFO Verification")
-                cols[2].page_link("pages/5_CFO_Verification.py", label="Go to Verification")
             elif not state.next: # Graph is finished
                 verdict = state.values.get("verdict", "UNKNOWN")
-                
                 if verdict == "APPROVE":
-                    cols[1].success("✅ APPROVED")
+                    cols[1].success("💎 APPROVED")
                 else:
-                    cols[1].error("❌ KILLED")
-                    
-                # Rich State Visibility
-                fin = state.values.get("financials", {})
-                prop = state.values.get("property_data", {})
+                    cols[1].error("💀 KILLED")
                 
-                m1, m2, m3, m4 = st.columns(4)
+                # --- THE 'STORY' (RESCUE LOGIC) ---
+                fin = state.values.get("financials", {})
+                reasoning = state.values.get("reasoning_text", "No synthesis provided.")
+                
+                m1, m2, m3 = st.columns([1, 1, 3])
                 m1.metric("DSCR", f"{fin.get('dscr', 0.0):.2f}")
                 m2.metric("Cap Rate", f"{fin.get('cap_rate', 0.0)*100:.1f}%")
-                m3.metric("Hold Yrs", f"{prop.get('hold_years', 'N/A')}")
-                m4.metric("Archetype", f"{state.values.get('seller_archetype', 'N/A')}")
                 
-                with st.expander("Manager Verdict & Instructions"):
-                    st.write(state.values.get("reasoning_text", ""))
-                    st.markdown("**Instructions given to Scribe:**")
-                    st.write(state.values.get("scribe_instructions", ""))
-                    
+                # The primary value add: The Manager's Logic
+                m3.markdown(f"**Principal's Counsel:** {reasoning[:250]}...")
+                
                 if verdict == "APPROVE":
-                    with st.expander("View LOI Draft"):
-                        st.markdown(state.values.get("loi_draft", "No draft generated."))
+                    st.page_link("pages/6_Workspace.py", label="Open Deal Workspace", icon="🏗️")
             else:
-                cols[1].info(f"Processing: {state.next}")
+                cols[1].info(f"🔄 {state.next[0]}")
+
+# AGENT STATUS BAR
+render_agent_bar()

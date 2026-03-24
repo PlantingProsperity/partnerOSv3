@@ -21,17 +21,21 @@ DEALS_DIR      = BASE_DIR / "deals"
 # on the NVIDIA API catalog to maximize performance and avoid rate limits.
 
 AGENT_MODELS = {
-    # Fast & Efficient Reasoning (Classification & Support)
-    "librarian": "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct", # Native multimodal ingestion
-    "profiler": "nvidia_nim/nvidia/mistral-nemo-minitron-8b-8k-instruct", # Rapid RAG analysis
-    
-    # High-Throughput Agentic Reasoning (The "Firehouse" Tier)
-    "cfo_p1": "nvidia_nim/qwen/qwen3-coder-480b-a35b-instruct", # Rigid JSON adherence
-    "prospect_sourcer": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b", # Confirmed stable high-throughput
-    "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b", # Fast agentic prose
-    
-    # The Frontier Generalists (The "Principal" Tier)
-    "manager": "nvidia_nim/deepseek-ai/deepseek-v3.1-terminus" # Deep logic synthesis
+    # The Principal Tier (Strategic Orchestration)
+    "manager": "nvidia_nim/deepseek-ai/deepseek-v3.1-terminus",
+
+    # The Underwriting Enclave (Rigid JSON Extraction)
+    "cfo_p1": "nvidia_nim/qwen/qwen3-coder-480b-a35b-instruct",
+
+    # The Sensory Layer (Multimodal Ingestion)
+    "librarian": "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct",
+
+    # The Firehouse Tier (High-Throughput Hunt)
+    "prospect_sourcer": "nvidia_nim/meta/llama-4-scout-17b-16e-instruct",
+    "profiler": "nvidia_nim/meta/llama-4-scout-17b-16e-instruct",
+
+    # Support & Drafting
+    "scribe": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
 }
 
 # Embeddings NEVER change to preserve vector math.
