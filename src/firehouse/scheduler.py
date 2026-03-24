@@ -13,12 +13,13 @@ def generate_morning_brief():
     Generates the daily Morning Brief summarizing pipeline stats and AI Prospect picks.
     1. Sweeps inbox for new data (ADR-S3-03).
     2. Runs automated GIS hunt for high-equity gems.
-    3. Runs sourcing analysis.
+    3. Runs Mass Pipeline Driver (A+ or Death filtering).
     4. Compiles markdown.
     """
     log.info("starting_firehouse_intake_sweep")
     from src.graph.nodes.librarian import Librarian
     from src.firehouse.equity_screen import run_firehouse_hunt
+    from src.scripts.pipeline_driver import run_mass_pipeline
     
     try:
         # Step 1: Process local files and audio
@@ -28,6 +29,9 @@ def generate_morning_brief():
         
         # Step 2: Run the automated GIS hunt (Tier 1 Scout)
         run_firehouse_hunt()
+        
+        # Step 3: Run the Mass Pipeline (Process 10 leads into Verdicts)
+        run_mass_pipeline(batch_size=10)
         
     except Exception as e:
         log.error("morning_intake_failed", error=str(e))
