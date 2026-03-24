@@ -15,10 +15,23 @@ log = get_logger("tests.full_canary")
 async def run_end_to_end_simulation():
     print("\n🚀 INITIALIZING FULL SYSTEM CANARY...")
     
+    deal_id = "full_canary_001"
+    address = "716 E MCLOUGHLIN BLVD"
+    
+    # 0. Register Deal to satisfy Foreign Key constraints
+    from src.database.db import get_connection
+    conn = get_connection()
+    conn.execute("""
+        INSERT OR IGNORE INTO deals (deal_id, address, address_slug, jacket_path, thread_id, created_at, updated_at)
+        VALUES (?, ?, 'full-canary', '/deals/canary', 'thread_canary', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    """, (deal_id, address))
+    conn.commit()
+    conn.close()
+    
     # 1. Setup Initial State
     state = DealState(
-        deal_id="full_canary_001",
-        address="716 E MCLOUGHLIN BLVD",
+        deal_id=deal_id,
+        address=address,
         parcel_number="41550000",
         status="INTAKE",
         cfo_verified=True, # Auto-verify for test

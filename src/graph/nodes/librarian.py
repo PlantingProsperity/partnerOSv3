@@ -29,9 +29,9 @@ class Librarian:
     def __init__(self):
         self.conn = get_connection()
         
-    def _check_duplicate(self, file_hash: str) -> bool:
-        """Checks if the file hash already exists in the system."""
-        row = self.conn.execute("SELECT 1 FROM files WHERE content_hash = ? LIMIT 1", (file_hash,)).fetchone()
+    def _check_duplicate(self, file_name: str) -> bool:
+        """Checks if the file name already exists in the system."""
+        row = self.conn.execute("SELECT 1 FROM files WHERE original_name = ? LIMIT 1", (file_name,)).fetchone()
         return row is not None
         
     def _transcribe_audio(self, file_path: Path) -> str:
@@ -41,6 +41,13 @@ class Librarian:
         2. NVIDIA Mistral-Nemo Minitron for synthesis (The "Refiner").
         """
         log.info("starting_hybrid_audio_transcription", file=file_path.name)
+        # 0. IDEMPOTENCY GUARD: Check if transcript already exists
+        out_name = f"TRANSCRIPT_{file_path.stem}.md"
+        out_path = config.KNOWLEDGE_DIR / "reference" / out_name
+        if out_path.exists():
+            log.info("transcript_already_exists_skipping", file=file_path.name)
+            return str(out_path)
+
         try:
             import litellm
             import subprocess
@@ -83,8 +90,6 @@ class Librarian:
             )
             
             # 4. Save to Institutional Memory
-            out_name = f"TRANSCRIPT_{file_path.stem}.md"
-            out_path = config.KNOWLEDGE_DIR / "reference" / out_name
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(response_str)
 
@@ -169,15 +174,19 @@ class Librarian:
         """Sweeps staging/inbox/ for new files."""
         processed_files = []
         for file_path in config.INBOX_DIR.rglob("*"):
+            # RECURSION GUARD: Skip the 'processed' vault and existing transcripts
+            if "processed" in file_path.parts or "_32k" in file_path.name:
+                continue
+                
             if file_path.is_file() and file_path.name != ".gitkeep":
                 if "unresolved" in file_path.parts:
                     continue
                     
-                file_hash = get_file_hash(file_path)
-                if self._check_duplicate(file_hash):
+                if self._check_duplicate(file_path.name):
                     log.info("duplicate_file_skipped", file=file_path.name)
                     continue
                 
+                file_hash = get_file_hash(file_path)
                 content_class, deal_id = self._classify_file(file_path)
                 status = "AWAITING_PRINCIPAL" if not deal_id else "ROUTED"
                 

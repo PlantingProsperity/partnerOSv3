@@ -9,7 +9,11 @@ import config
 
 @patch("src.graph.nodes.librarian.llm.complete")
 def test_librarian_sweep_and_deduplication(mock_complete, tmp_path):
-    # Mock the LLM returning a valid JSON string matching the Pydantic schema
+    """
+    Verifies that the Librarian correctly skips files that have already
+    been registered in the database by their original_name.
+    """
+    # Mock the LLM returning a valid JSON string
     mock_complete.return_value = '{"content_class": "FINANCIAL_DOCUMENT", "deal_id": "test_deal_123"}'
     
     # Setup test environment
@@ -17,29 +21,30 @@ def test_librarian_sweep_and_deduplication(mock_complete, tmp_path):
     test_inbox.mkdir(parents=True)
     config.INBOX_DIR = test_inbox
     
-    # Create a test file with unique content to avoid cross-test hash collisions in the real DB
-    unique_content = f"This is a test document. ID: {uuid.uuid4()}"
-    test_file = test_inbox / "test_doc.txt"
-    test_file.write_text(unique_content)
+    # Create a test file with a randomized name to avoid real DB collisions
+    unique_id = str(uuid.uuid4())[:8]
+    test_file_name = f"test_doc_{unique_id}.txt"
+    test_file = test_inbox / test_file_name
+    test_file.write_text(f"Unique content for {test_file_name}")
     
     librarian = Librarian()
     
     # 1. First sweep should process the file
     processed_first = librarian._sweep_inbox()
     assert len(processed_first) == 1
-    assert processed_first[0]["name"] == "test_doc.txt"
+    assert processed_first[0]["name"] == test_file_name
     
-    # Manually insert into DB to simulate routing/saving
+    # 2. Manually insert into DB to simulate routing/saving (Idempotency Key: original_name)
     file_hash = processed_first[0]["hash"]
-    unique_path = f"/dummy/path/{uuid.uuid4()}.txt"
     conn = get_connection()
     conn.execute("""
-        INSERT INTO files (file_path, original_name, file_type, content_class, content_hash, discovered_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (unique_path, "test_doc.txt", "other", "OTHER", file_hash, "2026-03-18"))
+        INSERT INTO files (file_path, original_name, file_type, content_class, content_hash, discovered_at, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (f"/vault/{test_file_name}", test_file_name, "other", "OTHER", file_hash, "2026-03-24", "PROCESSED"))
     conn.commit()
     conn.close()
     
-    # 2. Second sweep should skip the file due to duplicate hash
+    # 3. Second sweep should skip the file due to duplicate original_name
     processed_second = librarian._sweep_inbox()
     assert len(processed_second) == 0
+    print(f" ✅ Idempotency verified for: {test_file_name}")
