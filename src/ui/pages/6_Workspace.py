@@ -98,12 +98,10 @@ if st.session_state.current_deal_id:
         if not state_dict:
             # Fetch latest state if not in session
             config_dict = {"configurable": {"thread_id": deal_id}}
-            # We must provide the checkpointer from session state
-            checkpointer = st.session_state.get("checkpointer")
-            if checkpointer:
-                raw_state = graph.get_state(config_dict, checkpointer=checkpointer)
-                if raw_state and raw_state.values:
-                    state_dict = raw_state.values
+            # State retrieval via checkpointer is handled by the compiled graph instance
+            raw_state = graph.get_state(config_dict)
+            if raw_state and raw_state.values:
+                state_dict = raw_state.values
 
         tab_forensics, tab_vault, tab_draft = st.tabs(["📊 Forensics", "📁 The Vault", "📄 Drafts"])
         

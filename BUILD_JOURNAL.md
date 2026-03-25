@@ -159,3 +159,16 @@ This document is a persistent, meticulous log of the build process, architectura
 *   **ADR-S12-04: Grok Alignment (Total Market Awareness).**
     *   *Rationale:* Synthesized the Grok S3-S6 specifications into the production core. Upgraded the pipeline to process 240,000+ parcels with WKB geometry and implemented the async **Explorer Agent** for real-time worldwide market signals.
 
+---
+
+## Sprint S13: Production Hardening (Completed 2026-03-25)
+
+**Goal:** Zero-friction launch and 100% async/await test pass.
+**Key Decisions:**
+*   **ADR-S13-01: Native Checkpointer Persistence.**
+    *   *Rationale:* To resolve `ValueError: No checkpointer set` across multi-page Streamlit sessions, the LangGraph instance was moved to a centrally compiled state in `deal_graph.py` with an `AsyncSqliteSaver` established at import-time. This ensures every dashboard page shares the same neural memory.
+*   **ADR-S13-02: Async Harmony in Regression Suite.**
+    *   *Rationale:* Upgraded the entire `tests/` directory to use `pytest-asyncio` and `ainvoke()`. Implemented "Signature-Agnostic Mocks" (`*args, **kwargs`) to prevent `TypeError` crashes when LangGraph internal signatures evolve.
+*   **ADR-S13-03: Workspace Hard-Initialization.**
+    *   *Rationale:* Implemented a self-healing checkpointer initialization block in `6_Workspace.py`. If a user lands directly on the workspace without booting via `app.py`, the system autonomously establishes its memory connection.
+

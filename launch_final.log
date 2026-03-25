@@ -62,3 +62,4 @@ DEBUG: Prospects columns: ['id', 'owner_name', 'address', 'parcel_number', 'hold
 [31m [0m   [2m107 [0m                                                                               [31m [0m
 [31m────────────────────────────────────────────────────────────────────────────────────────[0m
 [1;91mTypeError: [0m[1;35mPregel.get_state[0m[1m([0m[1m)[0m got an unexpected keyword argument [32m'checkpointer'[0m
+  Stopping...

@@ -1,6 +1,7 @@
 from typing import Literal
 from langgraph.graph import StateGraph, START, END
 from langchain_core.runnables import RunnableConfig
+import config
 from src.graph.state import DealState
 from src.graph.nodes.librarian import librarian_node
 from src.graph.nodes.cfo import cfo_extract_node, cfo_calculate_node
@@ -89,5 +90,13 @@ def build_graph() -> StateGraph:
     
     return builder
 
+# --- NATIVE PERSISTENCE (ADR-S2-01) ---
+from langgraph.checkpoint.sqlite import SqliteSaver
+import sqlite3
+
+# We compile with a persistent checkpointer to enable get_state() globally
+_conn = sqlite3.connect(str(config.CHECKPOINT_DB_PATH), check_same_thread=False)
+_memory = SqliteSaver(_conn)
+
 # Compiled graph for import
-deal_graph = build_graph().compile()
+deal_graph = build_graph().compile(checkpointer=_memory, interrupt_before=["cfo_calculate"])
