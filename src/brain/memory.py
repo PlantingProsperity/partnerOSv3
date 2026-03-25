@@ -108,5 +108,5 @@ class MemoryManager:
         
         return {
             "facts": {f[0]: {"value": f[1], "confidence": f[2]} for f in facts},
-            "history": [{"date": e[0], "type": f[1], "summary": e[2]} for e in episodes]
+            "history": [{"date": e[0], "type": e[1], "summary": e[2]} for e in episodes]
         }

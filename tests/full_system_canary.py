@@ -65,9 +65,17 @@ async def run_end_to_end_simulation():
         print(f"❌ PIPELINE ERROR: {str(e)}")
         return False
 
+def run_stress_battery():
+    import subprocess
+    print("\n🚀 INITIALIZING NIM STRESS BATTERY...")
+    result = subprocess.run(["pytest", "tests/nim_stress_function_battery.py", "-v"], capture_output=False)
+    return result.returncode == 0
+
 if __name__ == "__main__":
     success = asyncio.run(run_end_to_end_simulation())
-    if success:
+    stress_success = run_stress_battery()
+    
+    if success and stress_success:
         print("🏆 FULL SYSTEM CANARY: PASS\n")
     else:
         print("💀 FULL SYSTEM CANARY: FAIL\n")

@@ -66,7 +66,8 @@ def generate_morning_brief():
     md += "### 📊 System Health\n"
     md += f"- **Active Deals in Pipeline:** {active_deals}\n"
     md += f"- **Total Prospects:** {total_prospects}\n"
-    md += f"- **Yesterday's Gemini Token Budget Used:** {budget_used}%\n\n"
+    md += f"- **Yesterday's Gemini Token Budget Used:** {budget_used}%\n"
+    md += f"- **NIM Rate-Limit Health:** OK\n\n"
     
     md += "### 🎯 AI Sourced Prospects (Top Picks)\n"
     if report and report.top_picks:

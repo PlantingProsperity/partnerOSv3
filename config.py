@@ -83,6 +83,8 @@ RCLONE_SYNC_TIMEOUT:   int = 300           # ms — ADR-H02
 # ── AI Budget (v3.2) ──────────────────────────────────────────────────────
 DAILY_TOKEN_BUDGET:   int = 1_000_000
 AUDIO_TOKEN_WARNING:  int = 800_000
+NIM_MAX_CONCURRENT = 30  # conservative vs observed 40 RPM
+NIM_TEST_MODELS = ["nvidia_nim/deepseek-ai/deepseek-v3.1-terminus", "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct"]
 
 # ── Clark County Data Ingestion (Sprint S3) ──────────────────────────────────
 PACS_ZIP_URL = "https://gis.clark.wa.gov/openDataHub/PacsData/PACS_OpenData.zip"

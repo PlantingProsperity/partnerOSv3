@@ -63,3 +63,19 @@ def trigger_self_healing():
         log.warning("initiating_self_healing", status=health["status"])
         # Logic to retry failed jobs or clear locks
         cleanup_temp_data()
+
+@with_db_retry()
+def log_test_result(test_name: str, rpm_hit: float, tokens_used: int, status: str):
+    """
+    Logs stress test results to maintenance_log.
+    """
+    conn = get_connection()
+    success = 1 if status.upper() == "PASS" else 0
+    # Map to existing columns or use message for extra data
+    message = f"RPM: {rpm_hit:.2f} | Status: {status}"
+    conn.execute("""
+        INSERT INTO maintenance_log (ts, job_name, success, nim_tokens_used, message)
+        VALUES (?, ?, ?, ?, ?)
+    """, (datetime.datetime.now(datetime.UTC).isoformat(), test_name, success, tokens_used, message))
+    conn.commit()
+    conn.close()

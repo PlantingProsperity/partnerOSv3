@@ -84,7 +84,7 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
             
         # --- Reliability: Automated Retries for JSON/API issues ---
         attempts = 0
-        max_attempts = 2
+        max_attempts = 8
         last_error = None
         
         while attempts < max_attempts:
@@ -113,7 +113,14 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
                 attempts += 1
                 last_error = e
                 log.warning("llm_retry_triggered", agent=agent, attempt=attempts, error=str(e))
-                time.sleep(2) # Backoff
+                if attempts < max_attempts:
+                    import random
+                    # If it's a 429 Rate Limit, apply a more aggressive backoff to respect the 40 RPM limit
+                    if "429" in str(e):
+                        base_delay = 5.0 # Start with a longer delay for 429s
+                        time.sleep(base_delay * (1.5 ** attempts) + random.uniform(1, 3))
+                    else:
+                        time.sleep((2 ** attempts) + random.uniform(0, 1)) # Standard exponential backoff
         
         raise last_error
         
