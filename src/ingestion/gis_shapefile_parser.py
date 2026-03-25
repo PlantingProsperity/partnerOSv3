@@ -1,5 +1,5 @@
 """
-gis_parser.py — Clark County GIS Shapefile Ingestion Module (Elevated)
+gis_shapefile_parser.py — Clark County GIS Shapefile Ingestion Module (Elevated)
 
 Handles:
 1. Downloading GIS volumes from ArcGIS sharing servers.
@@ -16,6 +16,7 @@ import pandas as pd
 import geopandas as gpd
 import sqlite3
 import asyncio
+from typing import Optional
 from pathlib import Path
 from src.database.db import get_connection, with_db_retry
 from src.utils.logger import get_logger
@@ -112,14 +113,14 @@ def enrich_prospects_with_gis():
     conn = get_connection()
     
     # 1. Update Centroids
-    conn.execute(\"\"\"
+    conn.execute("""
         UPDATE prospects
         SET centroid_lat = c.centroid_lat,
             centroid_lon = c.centroid_lon,
             last_gis_refresh = CURRENT_TIMESTAMP
         FROM raw_pacs_centroid c
         WHERE prospects.parcel_number = c.prop_id
-    \"\"\")
+    """)
     
     # 2. Update Zoning (Simplistic join based on raw_gis_zoning if it has Prop_id, 
     # otherwise a spatial join would be needed here via Python/Geopandas)

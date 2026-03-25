@@ -3,6 +3,7 @@ import sqlite3
 import json
 from pathlib import Path
 import config
+from src.graph.deal_graph import deal_graph as graph
 from src.ui.styles import inject_mac_styles
 from src.ui.components import bento_card, render_agent_bar
 from src.utils import llm
@@ -16,6 +17,13 @@ st.markdown("<p class='mac-subtext'>Senior Partner Deck — Strategic Deal Synth
 # 2. STATE INITIALIZATION
 if "current_deal_id" not in st.session_state:
     st.session_state.current_deal_id = None
+
+# --- Cognitive Memory Hard-Init (ADR-S9-01) ---
+if "checkpointer" not in st.session_state:
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    conn = sqlite3.connect(str(config.CHECKPOINT_DB_PATH), check_same_thread=False)
+    st.session_state.checkpointer = SqliteSaver(conn)
+    st.toast("Cognitive Memory Initialized", icon="🧠")
 
 # 3. PANE 1: THE DOCK (Deal Selector in Sidebar)
 with st.sidebar:
@@ -85,6 +93,18 @@ if st.session_state.current_deal_id:
 
     # --- PANE 3: THE STAGE (Forensics & Vault) ---
     with col_stage:
+        # --- Cognitive State Initialization (Global for all tabs) ---
+        state_dict = st.session_state.get(f"last_state_{deal_id}", {})
+        if not state_dict:
+            # Fetch latest state if not in session
+            config_dict = {"configurable": {"thread_id": deal_id}}
+            # We must provide the checkpointer from session state
+            checkpointer = st.session_state.get("checkpointer")
+            if checkpointer:
+                raw_state = graph.get_state(config_dict, checkpointer=checkpointer)
+                if raw_state and raw_state.values:
+                    state_dict = raw_state.values
+
         tab_forensics, tab_vault, tab_draft = st.tabs(["📊 Forensics", "📁 The Vault", "📄 Drafts"])
         
         with tab_forensics:
@@ -113,15 +133,6 @@ if st.session_state.current_deal_id:
                     # --- X-RAY VISION (Phase 1 Optimization) ---
                     st.markdown("#### 🔍 AI Logic Tree (X-Ray)")
                     
-                    # We will render the deterministic logic gates that led to the Manager's verdict
-                    state_dict = st.session_state.get(f"last_state_{deal_id}", {})
-                    if not state_dict:
-                        # Fetch latest state if not in session
-                        config_dict = {"configurable": {"thread_id": deal_id}}
-                        raw_state = graph.get_state(config_dict)
-                        if raw_state and raw_state.values:
-                            state_dict = raw_state.values
-                            
                     if state_dict:
                         failures = state_dict.get('heuristic_failures', [])
                         fin = state_dict.get('financials', {})

@@ -10,7 +10,7 @@ import httpx
 import asyncio
 from src.utils.logger import get_logger
 from src.ingestion.pacs_parser import run_full_pacs_refresh
-from src.ingestion.gis_parser import run_full_gis_refresh
+from src.ingestion.gis_shapefile_parser import run_full_gis_refresh
 from src.database.db import get_connection
 import config
 

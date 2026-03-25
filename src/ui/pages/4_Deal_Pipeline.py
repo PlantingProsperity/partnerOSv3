@@ -166,7 +166,7 @@ for i, (stage_key, stage_label) in enumerate(stages.items()):
                     if verdict == "APPROVE": bg_color = "rgba(52, 199, 89, 0.1)" # Green
                     elif verdict == "KILL": bg_color = "rgba(255, 59, 48, 0.1)" # Red
                     
-                    st.markdown(f\"\"\"
+                    st.markdown(f"""
                     <div class="bento-card" style="background: {bg_color}; padding: 15px; margin-bottom: 10px; min-height: 120px;">
                         <div style="font-weight: 700; font-size: 15px; color: white;">{deal['address']}</div>
                         <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 5px;">ID: {deal_id[:8]}</div>
@@ -175,7 +175,7 @@ for i, (stage_key, stage_label) in enumerate(stages.items()):
                             {state.values.get('reasoning_text', 'Third Partner is analyzing...').split('.')[0]}
                         </div>
                     </div>
-                    \"\"\", unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
                     
                     # Direct Action Links
                     if stage_key == "UNDER_REVIEW":

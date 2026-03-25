@@ -1,0 +1,64 @@
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.107:8501
+
+DEBUG_CONFIG: DB_PATH resolved to /home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/data/partner_os.db
+DEBUG: Connected to /home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/data/partner_os.db
+DEBUG: Found tables: ['schema_migrations', 'sqlite_sequence', 'maintenance_log', 'llm_calls', 'gemini_token_usage', 'brain_chunks', 'brain_chunks_fts_data', 'brain_chunks_fts_idx', 'brain_chunks_fts_docsize', 'brain_chunks_fts_config', 'letters', 'csv_import_log', 'deals', 'files', 'draft_financials', 'verified_financials', 'financial_analyses', 'clark_county_cache', 'seller_profiles', 'verdicts', 'brain_chunks_fts', 'property_records', 'raw_pacs_abstract', 'raw_pacs_sales', 'raw_pacs_imprv', 'raw_pacs_value', 'raw_pacs_centroid', 'prospects', 'temp_web_cache', 'episodic_traces', 'semantic_facts', 'procedural_tactics']
+DEBUG: Prospects columns: ['id', 'owner_name', 'address', 'parcel_number', 'hold_years', 'equity_score', 'pipeline_stage', 'source', 'archetype', 'last_contact', 'notes', 'created_at', 'updated_at', 'raw_data', 'centroid_lat', 'centroid_lon', 'zoning_code', 'flood_risk', 'last_pacs_refresh', 'rest_query_last_hit', 'last_gis_refresh']
+[2m2026-03-25T05:15:51.140928Z[0m [[32m[1minfo     [0m] [1mfirehouse_ingestion_jobs_extended[0m
+[2m2026-03-25T05:15:51.142060Z[0m [[32m[1minfo     [0m] [1mfirehouse_scheduler_started   [0m
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m6_Workspac[0m [31m [0m
+[31m [0m [1me.py[0m:104 in <module>                                                                 [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m101 [0m[2m│   │   │   [0m[2m# We must provide the checkpointer from session state[0m              [31m [0m
+[31m [0m   [2m102 [0m[2m│   │   │   [0mcheckpointer = st.session_state.get([33m"[0m[33mcheckpointer[0m[33m"[0m)                [31m [0m
+[31m [0m   [2m103 [0m[2m│   │   │   [0m[94mif[0m checkpointer:                                                   [31m [0m
+[31m [0m [31m❱ [0m104 [2m│   │   │   │   [0mraw_state = [1;4mgraph.get_state(config_dict, checkpointer=checkpoi[0m [31m [0m
+[31m [0m   [2m105 [0m[2m│   │   │   │   [0m[94mif[0m raw_state [95mand[0m raw_state.values:                             [31m [0m
+[31m [0m   [2m106 [0m[2m│   │   │   │   │   [0mstate_dict = raw_state.values                              [31m [0m
+[31m [0m   [2m107 [0m                                                                               [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mTypeError: [0m[1;35mPregel.get_state[0m[1m([0m[1m)[0m got an unexpected keyword argument [32m'checkpointer'[0m
+[31m──[0m[31m────────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────────[0m[31m──[0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mexec_code.py[0m:129 in                       [31m [0m
+[31m [0m exec_func_with_error_handling                                                        [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:687 in code_to_exec      [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/runtime/scriptrunner/[0m[1mscript_runner.py[0m:166 in _mpa_v1           [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/.venv/lib/python3.13/si[0m [31m [0m
+[31m [0m [2mte-packages/streamlit/navigation/[0m[1mpage.py[0m:380 in run                                  [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m [2m/home/fasahov/Gemini/Projects/PartnerOS_gemini_v2/partner_os/src/ui/pages/[0m[1m6_Workspac[0m [31m [0m
+[31m [0m [1me.py[0m:104 in <module>                                                                 [31m [0m
+[31m [0m                                                                                      [31m [0m
+[31m [0m   [2m101 [0m[2m│   │   │   [0m[2m# We must provide the checkpointer from session state[0m              [31m [0m
+[31m [0m   [2m102 [0m[2m│   │   │   [0mcheckpointer = st.session_state.get([33m"[0m[33mcheckpointer[0m[33m"[0m)                [31m [0m
+[31m [0m   [2m103 [0m[2m│   │   │   [0m[94mif[0m checkpointer:                                                   [31m [0m
+[31m [0m [31m❱ [0m104 [2m│   │   │   │   [0mraw_state = [1;4mgraph.get_state(config_dict, checkpointer=checkpoi[0m [31m [0m
+[31m [0m   [2m105 [0m[2m│   │   │   │   [0m[94mif[0m raw_state [95mand[0m raw_state.values:                             [31m [0m
+[31m [0m   [2m106 [0m[2m│   │   │   │   │   [0mstate_dict = raw_state.values                              [31m [0m
+[31m [0m   [2m107 [0m                                                                               [31m [0m
+[31m────────────────────────────────────────────────────────────────────────────────────────[0m
+[1;91mTypeError: [0m[1;35mPregel.get_state[0m[1m([0m[1m)[0m got an unexpected keyword argument [32m'checkpointer'[0m

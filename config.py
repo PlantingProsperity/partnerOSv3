@@ -8,6 +8,7 @@ load_dotenv()
 BASE_DIR       = Path(__file__).parent.resolve()
 DATA_DIR       = BASE_DIR / "data"
 DB_PATH        = DATA_DIR / "partner_os.db"
+print(f"DEBUG_CONFIG: DB_PATH resolved to {DB_PATH.absolute()}")
 CHECKPOINT_DB_PATH = DATA_DIR / "checkpoints.sqlite"
 KNOWLEDGE_DIR  = BASE_DIR / "knowledge"
 STAGING_DIR    = BASE_DIR / "staging" / "inbox"

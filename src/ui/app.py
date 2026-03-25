@@ -39,6 +39,21 @@ with st.sidebar:
 
 # 2. CORE SYSTEM INITIALIZATION
 if "checkpointer" not in st.session_state:
+    # --- DIAGNOSTIC LOGGING ---
+    try:
+        diag_conn = sqlite3.connect(str(config.DB_PATH))
+        diag_cursor = diag_conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [f[0] for f in diag_cursor.fetchall()]
+        print(f"DEBUG: Connected to {config.DB_PATH}")
+        print(f"DEBUG: Found tables: {tables}")
+        if 'prospects' in tables:
+            cols = [c[1] for c in diag_conn.execute("PRAGMA table_info(prospects);").fetchall()]
+            print(f"DEBUG: Prospects columns: {cols}")
+        diag_conn.close()
+    except Exception as e:
+        print(f"DEBUG: Schema check failed: {e}")
+    # --- END DIAGNOSTIC ---
+    
     start_firehouse()
     conn = sqlite3.connect(str(config.CHECKPOINT_DB_PATH), check_same_thread=False)
     st.session_state.checkpointer = SqliteSaver(conn)
