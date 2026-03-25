@@ -10,10 +10,13 @@ from src.database.db import get_connection
 @patch("src.graph.deal_graph.cfo_extract_node")
 @patch("src.graph.deal_graph.scout_node_wrapper")
 @patch("src.graph.deal_graph.profiler_node")
+@patch("src.graph.deal_graph.explorer_node")
+@patch("src.graph.deal_graph.deal_architect_node")
+@patch("src.graph.deal_graph.risk_sentinel_node")
 @patch("src.graph.deal_graph.manager_node")
 @patch("src.graph.deal_graph.scribe_node")
 @pytest.mark.asyncio
-async def test_scribe_routing_approve(mock_scribe, mock_manager, mock_profiler, mock_scout, mock_cfo, mock_librarian, tmp_path):
+async def test_scribe_routing_approve(mock_scribe, mock_manager, mock_sentinel, mock_architect, mock_explorer, mock_profiler, mock_scout, mock_cfo, mock_librarian, tmp_path):
     """
     Verifies that the graph correctly routes to the Scribe node on APPROVE verdict using ainvoke.
     """
@@ -22,6 +25,9 @@ async def test_scribe_routing_approve(mock_scribe, mock_manager, mock_profiler, 
     mock_cfo.side_effect = lambda *args, **kwargs: {}
     mock_scout.side_effect = lambda *args, **kwargs: {}
     mock_profiler.side_effect = lambda *args, **kwargs: {}
+    mock_explorer.side_effect = lambda *args, **kwargs: {}
+    mock_architect.side_effect = lambda *args, **kwargs: {}
+    mock_sentinel.side_effect = lambda *args, **kwargs: {}
     
     # Manager mocks APPROVE verdict
     mock_manager.side_effect = lambda *args, **kwargs: {"verdict": "APPROVE", "scribe_instructions": "Draft LOI"}
@@ -53,10 +59,13 @@ async def test_scribe_routing_approve(mock_scribe, mock_manager, mock_profiler, 
 @patch("src.graph.deal_graph.cfo_extract_node")
 @patch("src.graph.deal_graph.scout_node_wrapper")
 @patch("src.graph.deal_graph.profiler_node")
+@patch("src.graph.deal_graph.explorer_node")
+@patch("src.graph.deal_graph.deal_architect_node")
+@patch("src.graph.deal_graph.risk_sentinel_node")
 @patch("src.graph.deal_graph.manager_node")
 @patch("src.graph.deal_graph.scribe_node")
 @pytest.mark.asyncio
-async def test_scribe_routing_kill(mock_scribe, mock_manager, mock_profiler, mock_scout, mock_cfo, mock_librarian, tmp_path):
+async def test_scribe_routing_kill(mock_scribe, mock_manager, mock_sentinel, mock_architect, mock_explorer, mock_profiler, mock_scout, mock_cfo, mock_librarian, tmp_path):
     """
     Verifies that the graph correctly skips the Scribe node on KILL verdict using ainvoke.
     """
@@ -65,6 +74,9 @@ async def test_scribe_routing_kill(mock_scribe, mock_manager, mock_profiler, moc
     mock_cfo.side_effect = lambda *args, **kwargs: {}
     mock_scout.side_effect = lambda *args, **kwargs: {}
     mock_profiler.side_effect = lambda *args, **kwargs: {}
+    mock_explorer.side_effect = lambda *args, **kwargs: {}
+    mock_architect.side_effect = lambda *args, **kwargs: {}
+    mock_sentinel.side_effect = lambda *args, **kwargs: {}
     
     # Manager mocks KILL verdict
     mock_manager.side_effect = lambda *args, **kwargs: {"verdict": "KILL", "scribe_instructions": "No deal"}
