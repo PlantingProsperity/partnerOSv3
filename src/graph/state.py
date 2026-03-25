@@ -2,13 +2,20 @@ from typing import TypedDict, Annotated, List, Dict, Any, Optional
 import operator
 
 def merge_dicts(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
-    """Merges two dictionaries, allowing updates to nested fields."""
+    """
+    Recursively deep merges two dictionaries. 
+    Nested dictionaries are merged rather than overwritten.
+    """
     res = a.copy()
-    res.update(b)
+    for k, v in b.items():
+        if k in res and isinstance(res[k], dict) and isinstance(v, dict):
+            res[k] = merge_dicts(res[k], v)
+        else:
+            res[k] = v
     return res
 
-def merge_lists(a: list, b: list) -> list:
-    """Combines two lists."""
+def merge_lists(a: List[Any], b: List[Any]) -> List[Any]:
+    """Combines two lists via simple concatenation."""
     return a + b
 
 class DealState(TypedDict):
