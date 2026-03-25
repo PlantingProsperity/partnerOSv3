@@ -21,28 +21,42 @@ async def check_data_freshness():
     Daily check for remote PACS update using httpx HEAD.
     """
     log.info("starting_daily_freshness_check")
+    remote_etag = None
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             r = await client.head(config.PACS_ZIP_URL)
-            remote_etag = r.headers.get('ETag', r.headers.get('Last-Modified'))
+            r.raise_for_status()
+            raw_etag = r.headers.get('ETag') or r.headers.get('Last-Modified')
+            if raw_etag:
+                remote_etag = raw_etag.strip(' "\'')
+    except httpx.RequestError as e:
+        log.error("freshness_check_network_error", error=str(e))
+        return
+    except Exception as e:
+        log.error("freshness_check_failed", error=str(e))
+        return
         
-        conn = get_connection()
+    conn = get_connection()
+    try:
         last_success = conn.execute("""
             SELECT ts, message FROM maintenance_log 
             WHERE job_name = 'pacs_ingest' AND success = 1 
             ORDER BY ts DESC LIMIT 1
         """).fetchone()
-        conn.close()
         
-        is_fresh = last_success and remote_etag in str(last_success[1])
+        is_fresh = False
+        if last_success and remote_etag:
+            # Clean the stored message to safely compare
+            stored_msg = str(last_success[1]).replace('"', '').replace("'", "")
+            is_fresh = remote_etag in stored_msg
+            
         log.info("freshness_check_complete", is_fresh=is_fresh, etag=remote_etag)
         
-        if not is_fresh:
+        if not is_fresh and remote_etag:
             log.info("update_detected_triggering_pacs_refresh")
-            # We could trigger full refresh here or just flag it
             
-    except Exception as e:
-        log.error("freshness_check_failed", error=str(e))
+    finally:
+        conn.close()
 
 async def run_monthly_full_refresh():
     """
