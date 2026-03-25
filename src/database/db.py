@@ -4,6 +4,7 @@ import shutil
 import datetime
 import time
 import functools
+import random
 from pathlib import Path
 from typing import Optional, Callable, Any
 import config
@@ -14,6 +15,7 @@ log = get_logger("database.db")
 def with_db_retry(max_retries: int = 5, delay: float = 0.1):
     """
     Decorator to retry database operations if the database is locked.
+    Includes exponential backoff with jitter to prevent thundering herds.
     """
     def decorator(func: Callable):
         @functools.wraps(func)
@@ -23,10 +25,11 @@ def with_db_retry(max_retries: int = 5, delay: float = 0.1):
                 try:
                     return func(*args, **kwargs)
                 except sqlite3.OperationalError as e:
-                    if "locked" in str(e).lower():
+                    if "database is locked" in str(e).lower():
                         retries += 1
-                        time.sleep(delay * (2 ** retries)) # Exponential backoff
-                        log.warning("db_lock_retry", attempt=retries, func=func.__name__)
+                        current_delay = delay * (2 ** retries) + random.uniform(0, 1)
+                        log.warning("db_lock_retry", attempt=retries, delay=round(current_delay, 2), func=func.__name__)
+                        time.sleep(current_delay)
                         continue
                     raise e
             return func(*args, **kwargs)
