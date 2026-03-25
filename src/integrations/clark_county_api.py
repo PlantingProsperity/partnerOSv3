@@ -102,6 +102,8 @@ def fetch_parcel_by_prop_id(prop_id: str) -> Optional[Dict]:
     features = data.get('features', [])
     if not features:
         return None
+    if len(features) > 1:
+        log.warning("multiple_features_returned", prop_id=prop_id, count=len(features))
         
     f = features[0]
     attrs = f.get('attributes', {})
@@ -110,12 +112,15 @@ def fetch_parcel_by_prop_id(prop_id: str) -> Optional[Dict]:
     # Calculate Centroid from rings (State Plane Feet)
     lat, lon = None, None
     rings = geom.get('rings', [])
-    if rings and rings[0]:
+    if rings and len(rings) > 0 and rings[0] and len(rings[0]) > 0:
         avg_x = sum(pt[0] for pt in rings[0]) / len(rings[0])
         avg_y = sum(pt[1] for pt in rings[0]) / len(rings[0])
         # Transform to Lat/Lon
-        if rings and rings[0]:
+        try:
             lon, lat = TRANSFORMER.transform(avg_x, avg_y)
+        except Exception as e:
+            log.error("coordinate_transform_failed", error=str(e), prop_id=prop_id)
+            lat, lon = None, None
 
         # Panoramic Ingest: Return everything for the agents to find patterns
         result = {
@@ -177,7 +182,7 @@ def fetch_sale_history(prop_id: str, valid_only: bool = True) -> List[Dict]:
     data = _make_request(url, params)
     results = []
     for f in data.get('features', []):
-        attrs = f['attributes']
+        attrs = f.get('attributes', {})
         sale_date_ms = attrs.get('saleDate')
         sale_date_iso = None
         if sale_date_ms:
@@ -227,7 +232,7 @@ def fetch_comp_data(nbrhd: str, n_periods: int = 3) -> List[Dict]:
     data = _make_request(url, params)
     results = []
     for f in data.get('features', []):
-        attrs = f['attributes']
+        attrs = f.get('attributes', {})
         results.append({
             'neighborhood': attrs.get('neighborhood'),
             'sale_date_range': attrs.get('saleDateRange'),
@@ -287,7 +292,7 @@ def fetch_bulk_parcels(
             break
             
         for f in features:
-            attrs = f['attributes']
+            attrs = f.get('attributes', {})
             geom = f.get('geometry', {})
             all_parcels.append({
                 'prop_id': attrs.get('Prop_id'),
@@ -403,7 +408,7 @@ def fetch_shadow_pipeline(lat: float, lon: float, distance_ft: int = 500) -> Lis
         data = _make_request(url, params)
         results = []
         for f in data.get('features', []):
-            results.append(f['attributes'])
+            results.append(f.get('attributes', {}))
         return results
     except:
         return []
@@ -431,7 +436,7 @@ def fetch_vblm_details(lat: float, lon: float) -> Dict:
         data = _make_request(url, params)
         features = data.get('features', [])
         if features:
-            attrs = features[0]['attributes']
+            attrs = features[0].get('attributes', {})
             return {
                 "vblm_net_acres": attrs.get('acresNet'),
                 "vblm_category": attrs.get('vblm'),
@@ -471,8 +476,8 @@ def run_equity_screen(
         # Group by propertyId and get max saleDate
         latest_sales = {}
         for f in data.get('features', []):
-            pid = f['attributes']['propertyId']
-            sdate = f['attributes']['saleDate']
+            pid = f.get('attributes', {}).get('propertyId')
+            sdate = f.get('attributes', {}).get('saleDate')
             if pid not in latest_sales:
                 latest_sales[pid] = sdate
                 
