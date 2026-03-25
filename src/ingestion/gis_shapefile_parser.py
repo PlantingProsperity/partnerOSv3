@@ -11,6 +11,7 @@ Handles:
 
 import os
 import zipfile
+import shutil
 import httpx
 import pandas as pd
 import geopandas as gpd
@@ -40,71 +41,82 @@ async def download_gis_volume(url: str, vol_name: str) -> Optional[Path]:
     return local_path
 
 @with_db_retry()
+def _load_df_to_sql(df, table_name, conn):
+    df.to_sql(table_name, conn, if_exists="replace", index=False)
+
 def process_shapefiles(zip_path: Path):
     """Extracts and parses multiple GIS shapefiles with WKB persistence."""
     extract_dir = config.STAGING_DIR / "gis_extracted"
-    extract_dir.mkdir(exist_ok=True)
     
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_dir)
-        
-    conn = get_connection()
-    
-    # --- 1. TAXLOTS & CENTROIDS ---
-    tax_shp = list(extract_dir.glob("**/*TaxlotsPublic.shp"))
-    if tax_shp:
-        log.info("parsing_taxlots_shp", path=str(tax_shp[0]))
-        # Use low_memory=False if needed, usually gpd is fine
-        gdf = gpd.read_file(tax_shp[0])
-        
-        # Calculate centroids in native CRS before projection
-        gdf['centroid_lat_native'] = gdf.geometry.centroid.y
-        gdf['centroid_lon_native'] = gdf.geometry.centroid.x
-        
-        # Project to WGS84 for Lat/Lon
-        gdf_wgs84 = gdf.to_crs(epsg=4326)
-        gdf_wgs84['centroid_lat'] = gdf_wgs84.geometry.centroid.y
-        gdf_wgs84['centroid_lon'] = gdf_wgs84.geometry.centroid.x
-        
-        # Find Prop_id col (case insensitive)
-        prop_col = next((c for c in gdf_wgs84.columns if c.upper() == 'PROP_ID'), None)
-        if prop_col:
-            # WKB Geometry for SQLite
-            gdf_wgs84['geometry_wkb'] = gdf_wgs84.geometry.to_wkb()
+    try:
+        extract_dir.mkdir(exist_ok=True)
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
             
-            df_load = pd.DataFrame({
-                'prop_id': gdf_wgs84[prop_col].astype(str),
-                'centroid_lat': gdf_wgs84['centroid_lat'],
-                'centroid_lon': gdf_wgs84['centroid_lon'],
-                'geometry_wkb': gdf_wgs84['geometry_wkb']
-            })
-            df_load.to_sql("raw_pacs_centroid", conn, if_exists="replace", index=False)
-            log.info("taxlots_centroids_loaded", count=len(df_load))
+        conn = get_connection()
+        try:
+            # --- 1. TAXLOTS & CENTROIDS ---
+            tax_shp = list(extract_dir.glob("**/*TaxlotsPublic.shp"))
+            if tax_shp:
+                log.info("parsing_taxlots_shp", path=str(tax_shp[0]))
+                # Use low_memory=False if needed, usually gpd is fine
+                gdf = gpd.read_file(tax_shp[0])
+                
+                # Calculate centroids in native CRS before projection
+                gdf['centroid_lat_native'] = gdf.geometry.centroid.y
+                gdf['centroid_lon_native'] = gdf.geometry.centroid.x
+                
+                # Project to WGS84 for Lat/Lon
+                gdf_wgs84 = gdf.to_crs(epsg=4326)
+                gdf_wgs84['centroid_lat'] = gdf_wgs84.geometry.centroid.y
+                gdf_wgs84['centroid_lon'] = gdf_wgs84.geometry.centroid.x
+                
+                # Find Prop_id col (case insensitive)
+                prop_col = next((c for c in gdf_wgs84.columns if c.upper() == 'PROP_ID'), None)
+                if prop_col:
+                    # WKB Geometry for SQLite
+                    gdf_wgs84['geometry_wkb'] = gdf_wgs84.geometry.to_wkb()
+                    
+                    df_load = pd.DataFrame({
+                        'prop_id': gdf_wgs84[prop_col].astype(str),
+                        'centroid_lat': gdf_wgs84['centroid_lat'],
+                        'centroid_lon': gdf_wgs84['centroid_lon'],
+                        'geometry_wkb': gdf_wgs84['geometry_wkb']
+                    })
+                    _load_df_to_sql(df_load, "raw_pacs_centroid", conn)
+                    log.info("taxlots_centroids_loaded", count=len(df_load))
 
-    # --- 2. ZONING ---
-    zoning_shp = list(extract_dir.glob("**/Zoning.shp"))
-    if zoning_shp:
-        log.info("parsing_zoning_shp", path=str(zoning_shp[0]))
-        gdf_zone = gpd.read_file(zoning_shp[0])
-        # Simplify geometry for storage if too complex
-        # gdf_zone['geometry'] = gdf_zone.geometry.simplify(0.0001)
-        gdf_zone['geometry_wkb'] = gdf_zone.geometry.to_wkb()
-        
-        # Drop raw geometry for SQL load
-        df_zone = pd.DataFrame(gdf_zone.drop(columns='geometry'))
-        df_zone.to_sql("raw_gis_zoning", conn, if_exists="replace", index=False)
-        log.info("zoning_data_loaded")
+            # --- 2. ZONING ---
+            zoning_shp = list(extract_dir.glob("**/Zoning.shp"))
+            if zoning_shp:
+                log.info("parsing_zoning_shp", path=str(zoning_shp[0]))
+                gdf_zone = gpd.read_file(zoning_shp[0])
+                # Simplify geometry for storage if too complex
+                # gdf_zone['geometry'] = gdf_zone.geometry.simplify(0.0001)
+                gdf_zone['geometry_wkb'] = gdf_zone.geometry.to_wkb()
+                
+                # Drop raw geometry for SQL load
+                df_zone = pd.DataFrame(gdf_zone.drop(columns='geometry'))
+                _load_df_to_sql(df_zone, "raw_gis_zoning", conn)
+                log.info("zoning_data_loaded")
 
-    # --- 3. BUILDING FOOTPRINTS ---
-    bldg_shp = list(extract_dir.glob("**/BuildingFootprints.shp"))
-    if bldg_shp:
-        log.info("parsing_footprints_shp", path=str(bldg_shp[0]))
-        gdf_bldg = gpd.read_file(bldg_shp[0])
-        df_bldg = pd.DataFrame(gdf_bldg.drop(columns='geometry'))
-        df_bldg.to_sql("raw_gis_footprints", conn, if_exists="replace", index=False)
-        log.info("footprint_data_loaded")
-
-    conn.close()
+            # --- 3. BUILDING FOOTPRINTS ---
+            bldg_shp = list(extract_dir.glob("**/BuildingFootprints.shp"))
+            if bldg_shp:
+                log.info("parsing_footprints_shp", path=str(bldg_shp[0]))
+                gdf_bldg = gpd.read_file(bldg_shp[0])
+                df_bldg = pd.DataFrame(gdf_bldg.drop(columns='geometry'))
+                _load_df_to_sql(df_bldg, "raw_gis_footprints", conn)
+                log.info("footprint_data_loaded")
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        log.error("shapefile_processing_failed", error=str(e), path=str(zip_path))
+    finally:
+        # Cleanup extraction directory
+        if extract_dir.exists():
+            shutil.rmtree(extract_dir, ignore_errors=True)
 
 @with_db_retry()
 def enrich_prospects_with_gis():
