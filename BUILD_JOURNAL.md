@@ -144,3 +144,18 @@ This document is a persistent, meticulous log of the build process, architectura
 *   **ADR-S11-05: Panoramic GIS Forensics.**
     *   *Rationale:* Upgraded Scout to ingest 80+ raw GIS fields (Building Condition, Population Trends). The Manager now performs "Cross-Field Forensics" to match building decay against neighborhood demographics to find hidden distress.
 
+---
+
+## Sprint S12: Cognitive Memory & v4.0 Synthesis (Completed 2026-03-24)
+
+**Goal:** Statewide stateful reasoning and Grok-synthesized strategic depth.
+**Key Decisions:**
+*   **ADR-S12-01: Hierarchical Cognitive Memory (H-MEM).**
+    *   *Rationale:* Stateless RAG was causing "amnesia" across long negotiations. Implemented a 3-tier SQLite model: **Episodic Traces** (immutable logs), **Semantic Facts** (distilled truths), and **Procedural Tactics** (proactive patterns). Used Bayesian belief updating to resolve conflicting seller signals.
+*   **ADR-S12-02: Early-Fusion Sensory Gateway.**
+    *   *Rationale:* To move beyond text-only reasoning, refactored `llm.py` to support interleaved image/text blocks. The system can now "See" site plans and building photos alongside legal text for natively visual strategic analysis.
+*   **ADR-S12-03: Generative UI Architecture.**
+    *   *Rationale:* Implemented `registry.py` to map deal archetypes to Streamlit fragments. The Workspace dashboard now **autonomously assembles its own interface**—rendering specialized tools (Debt-Wrap Simulators, Density Calculators) on-the-fly based on the Manager's verdict.
+*   **ADR-S12-04: Grok Alignment (Total Market Awareness).**
+    *   *Rationale:* Synthesized the Grok S3-S6 specifications into the production core. Upgraded the pipeline to process 240,000+ parcels with WKB geometry and implemented the async **Explorer Agent** for real-time worldwide market signals.
+

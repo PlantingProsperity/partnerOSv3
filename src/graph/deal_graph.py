@@ -1,5 +1,6 @@
 from typing import Literal
 from langgraph.graph import StateGraph, START, END
+from langchain_core.runnables import RunnableConfig
 from src.graph.state import DealState
 from src.graph.nodes.librarian import librarian_node
 from src.graph.nodes.cfo import cfo_extract_node, cfo_calculate_node
@@ -28,15 +29,21 @@ def manager_router(state: DealState) -> Literal["scribe", "__end__"]:
         return "scribe"
     return "__end__"
 
+def librarian_node_wrapper(state: DealState, config: RunnableConfig) -> dict:
+    return librarian_node(state)
+
+def scout_node_wrapper(state: DealState, config: RunnableConfig) -> dict:
+    return scout_node(state, config)
+
 def build_graph() -> StateGraph:
     builder = StateGraph(DealState)
     
     # Add nodes
-    builder.add_node("librarian", librarian_node)
+    builder.add_node("librarian", librarian_node_wrapper)
     builder.add_node("cfo_extract", cfo_extract_node)
     builder.add_node("cfo_calculate", cfo_calculate_node)
     builder.add_node("pinneo_gate", pinneo_gate_node)
-    builder.add_node("scout", scout_node)
+    builder.add_node("scout", scout_node_wrapper)
     builder.add_node("profiler", profiler_node)
     builder.add_node("explorer", explorer_node)
     builder.add_node("manager", manager_node)
