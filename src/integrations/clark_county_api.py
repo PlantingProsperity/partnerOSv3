@@ -56,8 +56,8 @@ def _make_request(url: str, params: Dict, use_get: bool = True) -> Dict:
             else:
                 r = requests.post(url, data=params, timeout=30)
                 
-            if r.status_code == 429:
-                log.warning("api_rate_limit_hit", url=url, retry=retries)
+            if r.status_code == 429 or r.status_code in [500, 502, 503, 504]:
+                log.warning("api_rate_limit_or_server_error", url=url, status=r.status_code, retry=retries)
                 time.sleep(backoff)
                 retries += 1
                 backoff *= 2
@@ -471,7 +471,11 @@ def run_equity_screen(
             'orderByFields': "propertyId ASC, saleDate DESC"
         }
         
-        data = _make_request(url, params)
+        try:
+            data = _make_request(url, params)
+        except ClarkCountyAPIError as e:
+            log.warning("equity_screen_batch_failed", error=str(e), batch_start=i)
+            continue
         
         # Group by propertyId and get max saleDate
         latest_sales = {}

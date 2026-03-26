@@ -15,8 +15,8 @@ def merge_dicts(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
     return res
 
 def merge_lists(a: List[Any], b: List[Any]) -> List[Any]:
-    """Combines two lists via simple concatenation."""
-    return a + b
+    """Combines two lists via simple concatenation. Safely handles None values."""
+    return (a or []) + (b or [])
 
 class DealState(TypedDict):
     """

@@ -54,6 +54,7 @@ async def check_data_freshness():
         
         if not is_fresh and remote_etag:
             log.info("update_detected_triggering_pacs_refresh")
+            await run_full_pacs_refresh()
             
     finally:
         conn.close()

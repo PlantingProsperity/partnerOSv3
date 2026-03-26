@@ -42,7 +42,10 @@ async def download_gis_volume(url: str, vol_name: str) -> Optional[Path]:
 
 @with_db_retry()
 def _load_df_to_sql(df, table_name, conn):
-    df.to_sql(table_name, conn, if_exists="replace", index=False)
+    # Safely clear existing data to preserve schema/foreign keys (ADR-S15)
+    conn.execute(f"DELETE FROM {table_name}")
+    conn.commit()
+    df.to_sql(table_name, conn, if_exists="append", index=False)
 
 def process_shapefiles(zip_path: Path):
     """Extracts and parses multiple GIS shapefiles with WKB persistence."""
@@ -147,14 +150,14 @@ async def run_full_gis_refresh():
         # Volume 1: Taxlots / Zoning
         vol1_path = await download_gis_volume(config.GIS_VOL1_URL, "GIS_Vol1")
         if vol1_path:
-            process_shapefiles(vol1_path)
+            await asyncio.to_thread(process_shapefiles, vol1_path)
         
         # Volume 2: Environmental / Overlays
         vol2_path = await download_gis_volume(config.GIS_VOL2_URL, "GIS_Vol2")
         if vol2_path:
-            process_shapefiles(vol2_path)
+            await asyncio.to_thread(process_shapefiles, vol2_path)
             
-        enrich_prospects_with_gis()
+        await asyncio.to_thread(enrich_prospects_with_gis)
         log.info("gis_full_refresh_complete")
     except Exception as e:
         log.error("gis_refresh_failed", error=str(e))
