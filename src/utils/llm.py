@@ -14,15 +14,17 @@ def _check_budget():
     """Checks daily token usage against config limits."""
     try:
         conn = get_connection()
-        today = datetime.date.today().isoformat()
-        row = conn.execute("SELECT SUM(tokens_in + tokens_out) FROM gemini_token_usage WHERE date = ?", (today,)).fetchone()
-        usage = row[0] or 0
-        conn.close()
-        
-        if usage > config.DAILY_TOKEN_BUDGET:
-            log.error("DAILY_TOKEN_BUDGET_EXCEEDED", usage=usage, limit=config.DAILY_TOKEN_BUDGET)
-            return False
-        return True
+        try:
+            today = datetime.date.today().isoformat()
+            row = conn.execute("SELECT SUM(tokens_in + tokens_out) FROM gemini_token_usage WHERE date = ?", (today,)).fetchone()
+            usage = row[0] or 0
+            
+            if usage > config.DAILY_TOKEN_BUDGET:
+                log.error("DAILY_TOKEN_BUDGET_EXCEEDED", usage=usage, limit=config.DAILY_TOKEN_BUDGET)
+                return False
+            return True
+        finally:
+            conn.close()
     except:
         return True
 
@@ -93,8 +95,8 @@ def complete(prompt: Union[str, List[Dict[str, Any]]], agent: str, tier: str = N
                 content = response.choices[0].message.content
                 
                 # If a response format was requested, verify it looks like JSON
-                if response_format and not content.strip().startswith("{"):
-                    raise json.JSONDecodeError("Missing JSON structure", content, 0)
+                if response_format and (not content or not content.strip().startswith("{")):
+                    raise json.JSONDecodeError("Missing JSON structure", content or "", 0)
                 
                 duration = (datetime.datetime.now() - start_time).total_seconds() * 1000
                 _log_usage(
