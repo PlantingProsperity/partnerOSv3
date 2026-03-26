@@ -66,12 +66,16 @@ def get_connection(db_path: Path = config.DB_PATH) -> sqlite3.Connection:
     
     return conn
 
-def init_db(schema_path: Path = config.BASE_DIR / "src/database/schema.sql"):
+def init_db(schema_path: Path = config.BASE_DIR / "src/database/schema.sql", force: bool = False):
     """
     Initializes the database with the schema.sql DDL.
+    Requires force=True to delete an existing database.
     """
     db_path = config.DB_PATH
     if db_path.exists():
+        if not force:
+            print("Database already exists. Pass force=True to overwrite.")
+            return
         db_path.unlink()
         
     conn = get_connection()
@@ -89,6 +93,7 @@ def backup_before_migration():
     ADR-H04: Timestamped snapshot before schema changes.
     """
     if config.DB_PATH.exists():
+        config.DATA_DIR.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%SZ")
         backup_path = config.DATA_DIR / f"partner_os.db.pre_migration.{timestamp}"
         shutil.copy2(config.DB_PATH, backup_path)
